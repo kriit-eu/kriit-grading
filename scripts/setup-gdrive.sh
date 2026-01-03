@@ -1,6 +1,10 @@
 #!/bin/bash
 # Google Drive MCP Server Setup Script
 # Run after downloading client_secret_*.json from Google Cloud Console
+#
+# Usage:
+#   bun run setup:gdrive                    # Auto-find in ~/Downloads
+#   bun run setup:gdrive /path/to/file.json # Specify file path
 
 set -e
 
@@ -12,17 +16,30 @@ echo "========================="
 echo ""
 
 # Step 1: Find credentials file
-DOWNLOADED_FILE=$(ls -t ~/Downloads/client_secret_*.json 2>/dev/null | head -1)
+if [ -n "$1" ]; then
+    # User provided a path
+    if [ -f "$1" ]; then
+        DOWNLOADED_FILE="$1"
+    else
+        echo "❌ File not found: $1"
+        exit 1
+    fi
+else
+    # Auto-find in Downloads
+    DOWNLOADED_FILE=$(ls -t ~/Downloads/client_secret_*.json 2>/dev/null | head -1)
+fi
 
 if [ -z "$DOWNLOADED_FILE" ]; then
     echo "❌ No client_secret_*.json found in ~/Downloads/"
+    echo ""
+    echo "Usage: bun run setup:gdrive [/path/to/client_secret.json]"
     echo ""
     echo "Please complete these steps first:"
     echo "1. Go to https://console.cloud.google.com/"
     echo "2. Create project & enable Google Drive API"
     echo "3. Configure OAuth consent screen"
     echo "4. Create OAuth client (Desktop app)"
-    echo "5. Download JSON credentials"
+    echo "5. Download JSON credentials to ~/Downloads/"
     echo ""
     echo "See README.md for detailed instructions."
     exit 1

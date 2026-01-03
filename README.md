@@ -65,23 +65,26 @@ If students submit Google Drive links, Claude needs OAuth access to read those f
 ### 1. Create Google Cloud Project
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project (e.g., "Kriit Grading")
-3. Enable **Google Drive API** in APIs & Services → Library
+2. Click project dropdown (top left) → **New Project** → Name it "Kriit Grading" → **Create**
+3. Wait for project creation, then select it from the dropdown
+4. Go to **APIs & Services** → **Library** (left menu)
+5. Search for "Google Drive API" → Click it → **Enable**
 
 ### 2. Configure OAuth Consent Screen
 
-1. Go to **Google Auth Platform** → **Overview** → **Get started**
-2. Step 1 "App Information":
+1. In left menu, go to **Google Auth Platform** → **Overview**
+2. Click **Get started**
+3. Step 1 "App Information":
    - **App name**: `Kriit Grading MCP`
    - **User support email**: Select your email from dropdown
    - Click **Next**
-3. Step 2 "Audience":
-   - Select **External**
+4. Step 2 "Audience":
+   - Select **External** (allows any Google account, required for non-Workspace users)
    - Click **Next**
-4. Step 3 "Contact Information":
+5. Step 3 "Contact Information":
    - **Email addresses**: Your email
    - Click **Next**
-5. Step 4 "Finish":
+6. Step 4 "Finish":
    - Check **I agree to the Google API Services: User Data Policy**
    - Click **Continue**, then **Create**
 
@@ -92,20 +95,23 @@ If students submit Google Drive links, Claude needs OAuth access to read those f
 3. **Name**: `Kriit Grading MCP`
 4. Click **Create**
 5. In the "OAuth client created" dialog, click **Download JSON**
-6. Save the file (it will be named `client_secret_...json`)
+6. Save to your **Downloads folder** (file will be named `client_secret_...json`)
 
 ### 4. Add Test User
 
-1. Go to **Audience** → **Add users**
-2. Add your Google email as a test user
-3. Save
+Since the app is in "Testing" mode, you must add yourself as a test user:
+
+1. Go to **Audience** (left menu) → **Add users**
+2. Enter your Google email address
+3. Click **Save**
 
 ### 5. Setup MCP Server
 
-After downloading the JSON credentials, run:
+Run the setup script (it looks for credentials in `~/Downloads` by default):
 
 ```bash
 bun run setup:gdrive
+# Or specify path: bun run setup:gdrive -- /path/to/client_secret.json
 ```
 
 This script will:
