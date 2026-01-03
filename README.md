@@ -58,6 +58,77 @@ AUTO_APPROVE_HIGH_CONFIDENCE=true  # Set to false to require teacher approval fo
 
 You can also ask Claude to grade specific assignments or re-evaluate submissions.
 
+## Google Drive Access (Optional)
+
+If students submit Google Drive links, Claude needs OAuth access to read those files. This requires a one-time setup.
+
+### 1. Create Google Cloud Project
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project (e.g., "Kriit Grading")
+3. Enable **Google Drive API** in APIs & Services → Library
+
+### 2. Configure OAuth Consent Screen
+
+1. Go to **Google Auth Platform** → **Overview** → **Get started**
+2. Step 1 "App Information":
+   - **App name**: `Kriit Grading MCP`
+   - **User support email**: Select your email from dropdown
+   - Click **Next**
+3. Step 2 "Audience":
+   - Select **External**
+   - Click **Next**
+4. Step 3 "Contact Information":
+   - **Email addresses**: Your email
+   - Click **Next**
+5. Step 4 "Finish":
+   - Check **I agree to the Google API Services: User Data Policy**
+   - Click **Continue**, then **Create**
+
+### 3. Create OAuth Client
+
+1. Go to **Clients** → **Create OAuth client** (or click the link on Overview page)
+2. **Application type**: Select **Desktop app**
+3. **Name**: `Kriit Grading MCP`
+4. Click **Create**
+5. In the "OAuth client created" dialog, click **Download JSON**
+6. Save the file (it will be named `client_secret_...json`)
+
+### 4. Add Test User
+
+1. Go to **Audience** → **Add users**
+2. Add your Google email as a test user
+3. Save
+
+### 5. Setup MCP Server
+
+After downloading the JSON credentials, run:
+
+```bash
+bun run setup:gdrive
+```
+
+This script will:
+- Copy credentials to `~/.config/google-drive-mcp/`
+- Add MCP server to Claude Code
+- Open browser for Google authentication
+
+After authentication, restart Claude Code.
+
+**Available MCP tools:**
+- `search` - Search for files across Google Drive
+- `listFolder` - List files in a folder
+- `getGoogleDocContent` - Read Google Docs content
+- `getGoogleSheetContent` - Read Google Sheets data
+- `createTextFile`, `updateTextFile` - Create/update text files
+
+**To verify it works**, ask Claude: "List my recent Google Drive files" or provide a Drive link.
+
+**Re-authentication** (when token expires after 7 days):
+```bash
+bun run setup:gdrive
+```
+
 ## Workflow
 
 The grading process follows these steps:

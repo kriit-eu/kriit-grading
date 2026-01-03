@@ -13,7 +13,7 @@
 
 ```bash
 bun install                 # Install dependencies
-bun init                    # Create .env from template
+bun run setup               # Create .env from template
 # Edit .env with your API credentials
 
 bun list                    # Fetch ungraded assignments
@@ -101,6 +101,29 @@ bun clone
       └── 42/
           └── [kloonitud repo]
 ```
+
+### Samm 2.5: Google Drive failid
+
+Kui `solutionUrl` sisaldab `drive.google.com`:
+
+1. Ekstrakti faili ID URL-ist (nt `https://drive.google.com/file/d/1q95xNrEyO9nsVtOezjhxCrDawjhlWid0/view` → `1q95xNrEyO9nsVtOezjhxCrDawjhlWid0`)
+2. Kasuta MCP tööriista faili sisu lugemiseks:
+   - `search` - faili otsimiseks nime järgi
+   - `getGoogleDocContent` - Google Docs sisu lugemiseks
+   - `getGoogleSheetContent` - Google Sheets sisu lugemiseks
+3. Hinda sisu nagu tavalist esitust
+
+**Näide:**
+```
+Õpilane esitas: https://drive.google.com/file/d/1abc123/view
+
+→ Kasuta: search({ query: "filename" }) või getGoogleDocContent({ documentId: "1abc123" })
+→ Loe sisu ja hinda vastavalt kriteeriumidele
+```
+
+**Kui Google Drive pole seadistatud** (MCP server puudub või autentimine aegunud):
+- Lisa tagasisidesse: "Ei saa Google Drive failile ligi. Õpetaja peab käsitsi kontrollima."
+- Sea `autoApprove: false`
 
 ### Samm 3: Plagiaadikontroll
 
