@@ -1,0 +1,229 @@
+#!/usr/bin/env bun
+
+/**
+ * bun clone
+ *
+ * Clones all student repositories from grading-batch.json in parallel.
+ * Creates directory structure: ./student-grading/{studentName}/{assignmentId}/
+ * Saves assignment_data.json in each directory with full assignment context.
+ *
+ * Best-effort: continues if some repos fail (student may have deleted repo).
+ */
+
+import { existsSync, readFileSync } from 'fs';
+import { mkdir, writeFile } from 'fs/promises';
+import { join } from 'path';
+import { $ } from 'bun';
+import { getBatchFilePath, getWorkDir } from './config.js';
+
+// Parse command line flags
+const args = process.argv.slice(2);
+const flags = {
+  verbose: args.includes('--verbose') || args.includes('-v'),
+  dryRun: args.includes('--dry-run'),
+  strict: args.includes('--strict'),
+  permissive: !args.includes('--strict'), // default to permissive
+};
+
+function loadBatchData() {
+  const batchFile = getBatchFilePath();
+
+  if (!existsSync(batchFile)) {
+    console.error('❌ Error: grading-batch.json not found');
+    console.error('   Run: bun list');
+    process.exit(1);
+  }
+
+  const data = JSON.parse(readFileSync(batchFile, 'utf-8'));
+
+  if (!data.data || data.data.length === 0) {
+    console.log('✓ No assignments to clone');
+    process.exit(0);
+  }
+
+  return data.data;
+}
+
+async function cloneRepository(studentName, assignmentId, solutionUrl, assignmentData) {
+  const outputDir = getWorkDir();
+  const studentDir = join(outputDir, studentName);
+  const assignmentDir = join(studentDir, String(assignmentId));
+
+  try {
+    // Check if already cloned
+    if (existsSync(join(assignmentDir, '.git'))) {
+      if (flags.verbose) {
+        console.log(`⏭️  Skipped: ${studentName}/${assignmentId} (already exists)`);
+      }
+      return { status: 'skipped', studentName, assignmentId, reason: 'already exists' };
+    }
+
+    // Clone repository
+    if (!flags.dryRun) {
+      // Create parent directory only
+      await mkdir(studentDir, { recursive: true });
+
+      // Clone directly into target directory (git will create it)
+      await $`git clone ${solutionUrl} ${assignmentDir}`.quiet();
+
+      // Save assignment data
+      await writeFile(
+        join(assignmentDir, 'assignment_data.json'),
+        JSON.stringify(assignmentData, null, 2)
+      );
+    }
+
+    if (flags.verbose) {
+      console.log(`✅ Cloned: ${studentName}/${assignmentId}`);
+    }
+
+    return { status: 'success', studentName, assignmentId };
+
+  } catch (error) {
+    if (flags.verbose) {
+      console.error(`❌ Failed: ${studentName}/${assignmentId} - ${error.message}`);
+    }
+
+    return {
+      status: 'failed',
+      studentName,
+      assignmentId,
+      error: error.message
+    };
+  }
+}
+
+async function cloneAllRepositories(assignments) {
+  const tasks = [];
+
+  // Prepare all clone tasks
+  for (const assignment of assignments) {
+    for (const submission of assignment.submissions) {
+      if (!submission.solutionUrl || submission.solutionUrl === '') {
+        continue;
+      }
+
+      // Prepare assignment context for this student
+      const assignmentData = {
+        assignmentId: assignment.assignmentId,
+        assignmentName: assignment.assignmentName,
+        assignmentInstructions: assignment.assignmentInstructions,
+        assignmentLinkedId: assignment.assignmentLinkedId,
+        criteria: assignment.criteria,
+        prerequisites: assignment.prerequisites,
+        student: {
+          userId: submission.userId,
+          studentName: submission.studentName,
+          solutionUrl: submission.solutionUrl,
+          submittedAt: submission.submittedAt,
+          isGraded: submission.isGraded,
+          // Include pair partner ID for plagiarism detection
+          pairPartnerUserId: submission.pairPartnerUserId || null,
+        },
+        // Include peer submissions for plagiarism detection
+        peerSubmissions: assignment.submissions
+          .filter(s => s.userId !== submission.userId)
+          .map(s => ({
+            userId: s.userId,
+            studentName: s.studentName,
+            solutionUrl: s.solutionUrl,
+            submittedAt: s.submittedAt,
+            isGraded: s.isGraded,
+            pairPartnerUserId: s.pairPartnerUserId || null,
+          })),
+      };
+
+      tasks.push(
+        cloneRepository(
+          submission.studentName,
+          assignment.assignmentId,
+          submission.solutionUrl,
+          assignmentData
+        )
+      );
+    }
+  }
+
+  if (tasks.length === 0) {
+    console.log('✓ No repositories to clone');
+    return { success: 0, failed: 0, skipped: 0, results: [] };
+  }
+
+  console.log(`🔄 Cloning ${tasks.length} repositories in parallel...\n`);
+
+  // Execute all clones in parallel
+  const results = await Promise.all(tasks);
+
+  // Categorize results
+  const success = results.filter(r => r.status === 'success');
+  const failed = results.filter(r => r.status === 'failed');
+  const skipped = results.filter(r => r.status === 'skipped');
+
+  return {
+    success: success.length,
+    failed: failed.length,
+    skipped: skipped.length,
+    results,
+  };
+}
+
+function displaySummary(stats) {
+  console.log('\n📊 Clone Summary\n');
+  console.log('═'.repeat(70));
+  console.log(`✅ Success: ${stats.success}`);
+  console.log(`⏭️  Skipped: ${stats.skipped}`);
+  console.log(`❌ Failed:  ${stats.failed}`);
+  console.log('═'.repeat(70));
+
+  if (stats.failed > 0) {
+    console.log('\n❌ Failed repositories:');
+    const failed = stats.results.filter(r => r.status === 'failed');
+    failed.forEach(f => {
+      console.log(`   ${f.studentName}/${f.assignmentId}: ${f.error}`);
+    });
+  }
+
+  console.log();
+}
+
+async function main() {
+  try {
+    if (flags.dryRun) {
+      console.log('🔍 DRY RUN: No repositories will be cloned\n');
+    }
+
+    const assignments = loadBatchData();
+
+    if (flags.verbose) {
+      console.log(`📋 Loaded ${assignments.length} assignment(s) from grading-batch.json\n`);
+    }
+
+    const stats = await cloneAllRepositories(assignments);
+
+    displaySummary(stats);
+
+    if (!flags.dryRun) {
+      console.log(`📁 Repositories cloned to: ${getWorkDir()}/\n`);
+      console.log(`Next steps:`);
+      console.log(`  bun plagiarism    # Check for plagiarism`);
+    }
+
+    // Exit with error in strict mode if any clones failed
+    if (flags.strict && stats.failed > 0) {
+      console.error('\n❌ Exiting with error (--strict mode)');
+      process.exit(1);
+    }
+
+  } catch (error) {
+    console.error('❌ Error:', error.message);
+    if (flags.verbose) {
+      console.error(error);
+    }
+    process.exit(1);
+  }
+}
+
+// Only run if executed directly (not imported as module)
+if (import.meta.main) {
+  main();
+}

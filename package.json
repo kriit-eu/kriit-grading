@@ -1,0 +1,22 @@
+{
+  "name": "kriit-grading",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "AI grading assistant for Kriit learning management system",
+  "scripts": {
+    "list": "bun src/list.js",
+    "clone": "bun src/clone.js",
+    "plagiarism": "bun src/plagiarism.js",
+    "submit": "bun src/submit.js",
+    "init": "cp .env.example .env && echo 'Created .env - please configure your API credentials'",
+    "test": "bun test"
+  },
+  "keywords": [
+    "grading",
+    "education",
+    "ai",
+    "plagiarism-detection"
+  ],
+  "author": "Kriit",
+  "license": "MIT"
+}

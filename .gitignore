@@ -1,0 +1,24 @@
+# Environment
+.env
+
+# Runtime data
+student-grading/
+plagiarism-reports/
+grading-batch.json
+
+# Dependencies
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
