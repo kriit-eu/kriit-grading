@@ -2,6 +2,8 @@
 
 AI grading assistant for Kriit learning management system. This tool helps automate the grading workflow by fetching ungraded assignments, cloning student repositories, detecting plagiarism, **evaluating and grading student code**, and submitting feedback.
 
+It works by providing Claude with structured instructions (in `CLAUDE.md`) for evaluating programming assignments. Claude clones the student repositories, runs the code in Docker containers, checks against assignment criteria, detects plagiarism, and generates feedback in Estonian.
+
 ## Installation
 
 ```bash
