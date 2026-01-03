@@ -1,6 +1,6 @@
 # Kriit Grading
 
-AI grading assistant for Kriit learning management system. This tool helps automate the grading workflow by fetching ungraded assignments, cloning student repositories, detecting plagiarism, and submitting feedback.
+AI grading assistant for Kriit learning management system. This tool helps automate the grading workflow by fetching ungraded assignments, cloning student repositories, detecting plagiarism, **evaluating and grading student code**, and submitting feedback.
 
 ## Installation
 

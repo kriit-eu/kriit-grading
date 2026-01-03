@@ -2,7 +2,7 @@
   "name": "kriit-grading",
   "version": "1.0.0",
   "type": "module",
-  "description": "AI grading assistant for Kriit learning management system",
+  "description": "AI-powered code evaluation and grading assistant for Kriit learning management system",
   "scripts": {
     "list": "bun src/list.js",
     "clone": "bun src/clone.js",
@@ -13,6 +13,7 @@
   },
   "keywords": [
     "grading",
+    "code-evaluation",
     "education",
     "ai",
     "plagiarism-detection"
