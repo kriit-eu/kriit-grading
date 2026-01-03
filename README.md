@@ -12,6 +12,12 @@ It works by providing Claude with structured instructions (in `CLAUDE.md`) for e
 
 This two-tier approach ensures that clear passes are processed quickly while anything questionable gets human review.
 
+**Grade types:**
+
+- **Pass/fail assignments** (`A`/`MA`) - Claude evaluates whether all required criteria are met. If everything works correctly, the grade is `A` (arvestatud/passed). If any criterion fails, the grade is `MA` (mittearvestatud/not passed) with detailed feedback on what needs to be fixed.
+
+- **Numeric grades** (`1`-`5`) - Claude evaluates each criterion and calculates a grade based on completion percentage. Grade `5` requires all criteria met with quality code. Lower grades reflect partial completion or quality issues. Detailed feedback explains which criteria passed/failed and why.
+
 ## Installation
 
 ```bash
