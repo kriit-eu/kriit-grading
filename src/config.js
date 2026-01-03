@@ -12,12 +12,13 @@ const PROJECT_ROOT = join(__dirname, '..');
 
 /**
  * Load and validate configuration from environment
- * @returns {{apiUrl: string, apiKey: string}}
+ * @returns {{apiUrl: string, apiKey: string, autoApproveHighConfidence: boolean}}
  * @throws {Error} if required env vars are missing
  */
 export function loadConfig() {
   const apiUrl = process.env.KRIIT_API_URL;
   const apiKey = process.env.KRIIT_API_KEY;
+  const autoApprove = process.env.AUTO_APPROVE_HIGH_CONFIDENCE;
 
   if (!apiUrl) {
     throw new Error('KRIIT_API_URL not set. Run "bun init" to create .env file.');
@@ -29,7 +30,8 @@ export function loadConfig() {
 
   return {
     apiUrl: apiUrl.replace(/\/$/, ''), // Remove trailing slash
-    apiKey
+    apiKey,
+    autoApproveHighConfidence: autoApprove !== 'false' // Default to true
   };
 }
 

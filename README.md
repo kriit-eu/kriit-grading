@@ -4,6 +4,14 @@ AI grading assistant for Kriit learning management system. This tool helps autom
 
 It works by providing Claude with structured instructions (in `CLAUDE.md`) for evaluating programming assignments. Claude clones the student repositories, runs the code in Docker containers, checks against assignment criteria, detects plagiarism, and generates feedback in Estonian.
 
+**Grading outcomes:**
+
+- **High confidence pass** - When Claude is confident that all criteria are met and there are no issues, the grade is automatically applied to the student's assignment (if `AUTO_APPROVE_HIGH_CONFIDENCE=true` in `.env`). The student sees their grade immediately.
+
+- **Any suspicion or uncertainty** - When Claude detects potential issues (plagiarism, incomplete criteria, code that doesn't run, or low confidence), it does NOT auto-approve. Instead, it leaves a **teacher-only visible comment** in Kriit with detailed findings. The teacher can then review the submission, read Claude's analysis, and decide whether to approve, modify the grade, or request resubmission.
+
+This two-tier approach ensures that clear passes are processed quickly while anything questionable gets human review.
+
 ## Installation
 
 ```bash
@@ -18,6 +26,7 @@ The `bun init` command creates a `.env` file from the template. Edit it to add y
 ```bash
 KRIIT_API_URL=https://kriit.vikk.ee
 KRIIT_API_KEY=your_api_key_here
+AUTO_APPROVE_HIGH_CONFIDENCE=true  # Set to false to require teacher approval for all
 ```
 
 ## Getting Started
