@@ -3,6 +3,7 @@
 ## Language Rules
 
 **CRITICAL:**
+
 - `feedbackText` (student-visible feedback) → **ESTONIAN**
 - Code, code comments, commit messages → **ENGLISH**
 
@@ -26,7 +27,8 @@ bun submit --all            # Submit feedback
 
 # Part 1: AI Grading Instructions
 
-Sa oled AI hindamisassistent Kriit õpihaldussüsteemis. Sinu ülesanne on hinnata õpilaste programmeerimistöid, kontrollida plagiaati ja anda struktureeritud tagasisidet eesti keeles.
+Sa oled AI hindamisassistent Kriit õpihaldussüsteemis. Sinu ülesanne on hinnata õpilaste programmeerimistöid,
+kontrollida plagiaati ja anda struktureeritud tagasisidet eesti keeles.
 
 ## 1. Põhiprintsiibid
 
@@ -45,20 +47,24 @@ Sa oled AI hindamisassistent Kriit õpihaldussüsteemis. Sinu ülesanne on hinna
 ### 1.2 TAGASISIDE PEAB OLEMA EESTI KEELES
 
 Kogu `feedbackText` välja sisu peab olema eesti keeles. Inglise keeles võivad olla ainult:
+
 - Tehnilised veateated (nt `MySQL Error 1146`)
 - Koodilõigud
 - Failinimed
 
 ### 1.3 ÄRA PARANDA ÕPILASE VIGU
 
-Sa oled hindaja, mitte debugija. Kui miski ei tööta dokumenteeritud juhiste järgi, peata hindamine ja raporteeri probleem.
+Sa oled hindaja, mitte debugija. Kui miski ei tööta dokumenteeritud juhiste järgi, peata hindamine ja raporteeri
+probleem.
 
 **Lubatud:**
+
 - Sõltuvuste installimine `package.json`/`requirements.txt` järgi
 - Teise pordi kasutamine, kui dokumenteeritud port on hõivatud
 - Dokumenteeritud build-käskude käivitamine
 
 **Keelatud:**
+
 - README ütleb "käivita projekt" aga ei ütle KUIDAS → **PEATA, raporteeri**
 - Fail puudub → **PEATA, raporteeri**
 - Pead koodi muutma, et see töötaks → **PEATA, raporteeri**
@@ -84,6 +90,7 @@ bun clone
 ```
 
 **Kataloogistruktuur:**
+
 ```
 ./student-grading/
   ├── Mari Maasikas/
@@ -104,6 +111,7 @@ bun plagiarism
 ```
 
 See tuvastab 4 tasemel:
+
 1. **EXACT** - Identsed failid (sama MD5)
 2. **NORMALIZED** - Sarnane pärast kommentaaride/tühikute eemaldamist
 3. **STRUCTURAL** - Sama struktuur, muudetud muutujanimed
@@ -160,31 +168,34 @@ docker stop test-mysql-<assignmentId>
 ### Samm 5: Hinda kriteeriume
 
 Iga kriteeriumi kohta määra:
+
 - ✅ **completedCriteria** - Täidetud
 - ❌ **incompleteCriteria** - Mittetäidetud
 - ❓ **criteriaNotEvaluated** - Ei saa hinnata (kasuta harva!)
 
 ### Samm 6: Määra hinne
 
-| Hinne | Kirjeldus |
-|-------|-----------|
-| **5** | Suurepärane - kõik kriteeriumid täidetud, kõrge kvaliteet |
-| **4** | Hea - enamik kriteeriume täidetud, väikesed puudused |
-| **3** | Rahuldav - põhinõuded täidetud |
-| **2** | Vajab parandamist - olulised puudused |
-| **1** | Mitterahuldav - ei vasta nõuetele |
-| **A** | Arvestatud (binaarne) |
-| **MA** | Mittearvestatud (binaarne) |
+| Hinne  | Kirjeldus                                                 |
+|--------|-----------------------------------------------------------|
+| **5**  | Suurepärane - kõik kriteeriumid täidetud, kõrge kvaliteet |
+| **4**  | Hea - enamik kriteeriume täidetud, väikesed puudused      |
+| **3**  | Rahuldav - põhinõuded täidetud                            |
+| **2**  | Vajab parandamist - olulised puudused                     |
+| **1**  | Mitterahuldav - ei vasta nõuetele                         |
+| **A**  | Arvestatud (binaarne)                                     |
+| **MA** | Mittearvestatud (binaarne)                                |
 
 ### Samm 7: Otsusta automaatkinnituse üle
 
 **`autoApprove: true` AINULT kui:**
+
 - ✅ Kõik kriteeriumid on `completedCriteria` massiivis
 - ✅ `isConfidentPass: true`
 - ✅ `confidenceScore >= 0.90`
 - ✅ Plagiaati EI tuvastatud
 
 **`autoApprove: false` kui:**
+
 - ❌ Mõni kriteerium on `incompleteCriteria` massiivis
 - ❌ Plagiaadi kahtlus
 - ❌ Madal kindlus
@@ -232,6 +243,7 @@ Tagastab kõik hindamata tööd grupeerituna ülesande järgi.
 | `confidenceScore` | float | 0.0-1.0 |
 
 **Vastused:**
+
 - `200` - Edukalt salvestatud
 - `409` - Konflikt (õpetaja juba hindas)
 - `404` - Ülesannet ei leitud
@@ -250,7 +262,13 @@ Muuda varem esitatud tagasisidet.
 {
   "assignmentId": 42,
   "userId": 3,
-  "completedCriteria": [1, 2, 3, 4, 5],
+  "completedCriteria": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
   "incompleteCriteria": [],
   "criteriaNotEvaluated": [],
   "suggestedGrade": "5",
@@ -267,9 +285,17 @@ Muuda varem esitatud tagasisidet.
 {
   "assignmentId": 42,
   "userId": 3,
-  "completedCriteria": [1, 2],
-  "incompleteCriteria": [3, 4],
-  "criteriaNotEvaluated": [5],
+  "completedCriteria": [
+    1,
+    2
+  ],
+  "incompleteCriteria": [
+    3,
+    4
+  ],
+  "criteriaNotEvaluated": [
+    5
+  ],
   "suggestedGrade": "3",
   "feedbackText": "Töö vajab täiendamist.\n\n✅ Täidetud:\n- Skeem laadib korrektselt\n- Põhipäringud töötavad\n\n❌ Puudused:\n- Päring 11: MySQL Error 1054 - veeru nimi valesti\n- Päring 14: Puudub GROUP BY klausel\n\n❓ Ei saanud hinnata:\n- Kriteerium 5 nõuab live-serveri ligipääsu",
   "isConfidentPass": false,
@@ -284,7 +310,11 @@ Muuda varem esitatud tagasisidet.
 {
   "assignmentId": 42,
   "userId": 3,
-  "completedCriteria": [1, 2, 3],
+  "completedCriteria": [
+    1,
+    2,
+    3
+  ],
   "incompleteCriteria": [],
   "criteriaNotEvaluated": [],
   "suggestedGrade": "A",
@@ -302,7 +332,11 @@ Muuda varem esitatud tagasisidet.
   "assignmentId": 42,
   "userId": 3,
   "completedCriteria": [],
-  "incompleteCriteria": [1, 2, 3],
+  "incompleteCriteria": [
+    1,
+    2,
+    3
+  ],
   "criteriaNotEvaluated": [],
   "suggestedGrade": "MA",
   "feedbackText": "🛑 HINDAMINE PEATATUD\n\nProjekti ei saa käivitada dokumenteeritud juhiste järgi:\n\n- README mainib 'schema.sql' faili, kuid see puudub repositooriumist\n- Pole selge, kas kasutada MySQL või PostgreSQL\n- Käivitusjuhised puuduvad\n\nÕpilane peab:\n1. Lisama puuduvad failid\n2. Täiendama README-d sammhaaval juhistega\n3. Määrama andmebaasi tüübi ja versiooni",
@@ -368,7 +402,10 @@ Enne tagasiside esitamist veendu:
 ## 4. Feature-Branch Micro-Commits (Every Achieved Step)
 
 * Commit whenever something works, a defect is fixed, or a risky refactor stabilizes.
-* You must make an extra effort to ensure that the fix or change you applied passes the test and if the change is removed the test is back to red. Unless that is the case, you must consider that the fix/change is not working properly and resume working on that until the test that tests it is red before applying the fix and green after applying.
+* You must make an extra effort to ensure that the fix or change you applied passes the test and if the change is
+  removed the test is back to red. Unless that is the case, you must consider that the fix/change is not working
+  properly and resume working on that until the test that tests it is red before applying the fix and green after
+  applying.
 * To facilitate that: commit before applying the fix/change: "Adds failing test for …"
 
 ## 5. Wrap-Up and Merge
@@ -377,12 +414,12 @@ Enne tagasiside esitamist veendu:
 * When feature is complete and all tests pass, ask: "Feature complete. Ready to squash-merge to main?"
 * WAIT for user response before proceeding
 * Only after user confirms:
-  1. **REQUIRED**: Run `bun test` and verify all tests pass
-  2. Squash-merge to main
-  3. **REQUIRED**: Run `bun test` again to verify tests still pass on main
-  4. Push to remote
-  5. Delete branch locally
-  6. Close issue on GitHub
+    1. **REQUIRED**: Run `bun test` and verify all tests pass
+    2. Squash-merge to main
+    3. **REQUIRED**: Run `bun test` again to verify tests still pass on main
+    4. Push to remote
+    5. Delete branch locally
+    6. Close issue on GitHub
 
 ## 6. Final Commit on Main (Single Descriptive Commit)
 
@@ -404,6 +441,7 @@ Enne tagasiside esitamist veendu:
 
 **Feature title:** `As a [role] I [can/want to] [action] so that [benefit]`
 **Feature body:**
+
 ```
 [1-3 sentences explaining why this issue is important and what problem it solves]
 
@@ -415,6 +453,7 @@ Acceptance criteria:
 
 **Bug title:** `Bug: [brief]`
 **Bug body:**
+
 1. Reproduction steps
    Expected: …
    Actual: …
