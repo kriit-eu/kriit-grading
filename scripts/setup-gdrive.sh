@@ -49,12 +49,11 @@ echo "✅ Found credentials: $(basename "$DOWNLOADED_FILE")"
 
 # Step 2: Create config directory
 mkdir -p "$CONFIG_DIR"
-echo "✅ Created config directory: $CONFIG_DIR"
 
-# Step 3: Copy credentials
+# Step 3: Copy credentials (overwrites existing)
 cp "$DOWNLOADED_FILE" "$CREDENTIALS_FILE"
 chmod 600 "$CREDENTIALS_FILE"
-echo "✅ Copied credentials to: $CREDENTIALS_FILE"
+echo "✅ Credentials saved to: $CREDENTIALS_FILE"
 
 # Step 4: Add MCP server to Claude Code
 echo ""

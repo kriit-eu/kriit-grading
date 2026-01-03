@@ -114,9 +114,9 @@ bun run setup:gdrive
 # Or specify path: bun run setup:gdrive -- /path/to/client_secret.json
 ```
 
-This script will:
-- Copy credentials to `~/.config/google-drive-mcp/`
-- Add MCP server to Claude Code
+This script is safe to run multiple times. It will:
+- Copy credentials to `~/.config/google-drive-mcp/` (overwrites existing)
+- Configure MCP server in Claude Code (replaces existing if present)
 - Open browser for Google authentication
 
 After authentication, restart Claude Code.
