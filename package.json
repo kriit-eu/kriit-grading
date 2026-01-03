@@ -8,7 +8,7 @@
     "clone": "bun src/clone.js",
     "plagiarism": "bun src/plagiarism.js",
     "submit": "bun src/submit.js",
-    "init": "cp .env.example .env && echo 'Created .env - please configure your API credentials'",
+    "setup": "cp .env.example .env && echo 'Created .env - please configure your API credentials'",
     "test": "bun test"
   },
   "keywords": [

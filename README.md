@@ -23,11 +23,10 @@ This two-tier approach ensures that clear passes are processed quickly while any
 ```bash
 git clone https://github.com/kriit-eu/kriit-grading.git
 cd kriit-grading
-bun install
-bun init
+bun setup
 ```
 
-The `bun init` command creates a `.env` file from the template. Edit it to add your API credentials:
+The `bun setup` command creates a `.env` file from the template. Edit it to add your API credentials:
 
 ```bash
 KRIIT_API_URL=https://kriit.vikk.ee
