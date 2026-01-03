@@ -20,6 +20,30 @@ KRIIT_API_URL=https://kriit.vikk.ee
 KRIIT_API_KEY=your_api_key_here
 ```
 
+## Getting Started
+
+1. Open the project directory in [Claude Code](https://claude.ai/download):
+   ```bash
+   cd kriit-grading
+   claude
+   ```
+
+2. Ask Claude to start grading:
+   ```
+   Grade student assignments
+   ```
+
+3. Claude will automatically:
+   - Read `CLAUDE.md` for grading instructions
+   - Fetch ungraded assignments from Kriit API
+   - Clone student repositories
+   - Run plagiarism detection
+   - Test each submission in Docker
+   - Generate feedback in Estonian
+   - Submit grades back to Kriit
+
+You can also ask Claude to grade specific assignments or re-evaluate submissions.
+
 ## Workflow
 
 The grading process follows these steps:
