@@ -23,10 +23,10 @@ This two-tier approach ensures that clear passes are processed quickly while any
 ```bash
 git clone https://github.com/kriit-eu/kriit-grading.git
 cd kriit-grading
-bun setup
+bun run setup
 ```
 
-The `bun setup` command creates a `.env` file from the template. Edit it to add your API credentials:
+The `bun run setup` command creates a `.env` file from the template. Edit it to add your API credentials:
 
 ```bash
 KRIIT_API_URL=https://kriit.vikk.ee
@@ -63,34 +63,34 @@ You can also ask Claude to grade specific assignments or re-evaluate submissions
 The grading process follows these steps:
 
 ```
-bun list        → Fetch ungraded assignments
-bun clone       → Clone student repositories
-bun plagiarism  → Check for plagiarism
-[Grade work]    → Review and grade each submission
-bun submit      → Submit feedback to Kriit
+bun run list        → Fetch ungraded assignments
+bun run clone       → Clone student repositories
+bun run plagiarism  → Check for plagiarism
+[Grade work]        → Review and grade each submission
+bun run submit      → Submit feedback to Kriit
 ```
 
 ## Commands
 
-### `bun list`
+### `bun run list`
 
 Fetches all ungraded assignments from Kriit API and saves them to `grading-batch.json`.
 
 ```bash
-bun list              # Fetch and display summary
-bun list --verbose    # Show detailed output
-bun list --dry-run    # Preview without saving
+bun run list              # Fetch and display summary
+bun run list --verbose    # Show detailed output
+bun run list --dry-run    # Preview without saving
 ```
 
-### `bun clone`
+### `bun run clone`
 
 Clones all student repositories from `grading-batch.json` in parallel.
 
 ```bash
-bun clone             # Clone all repositories
-bun clone --verbose   # Show detailed output
-bun clone --dry-run   # Preview without cloning
-bun clone --strict    # Exit with error if any clone fails
+bun run clone             # Clone all repositories
+bun run clone --verbose   # Show detailed output
+bun run clone --dry-run   # Preview without cloning
+bun run clone --strict    # Exit with error if any clone fails
 ```
 
 Creates directory structure:
@@ -105,15 +105,15 @@ student-grading/
         └── [cloned repo]
 ```
 
-### `bun plagiarism`
+### `bun run plagiarism`
 
 Multi-level plagiarism detection across all cloned repositories.
 
 ```bash
-bun plagiarism              # Run detection
-bun plagiarism --verbose    # Show detailed matches
-bun plagiarism --threshold=0.90  # Custom threshold (default: 0.85)
-bun plagiarism --dry-run    # Preview without saving reports
+bun run plagiarism              # Run detection
+bun run plagiarism --verbose    # Show detailed matches
+bun run plagiarism --threshold=0.90  # Custom threshold (default: 0.85)
+bun run plagiarism --dry-run    # Preview without saving reports
 ```
 
 Detection levels:
@@ -124,14 +124,14 @@ Detection levels:
 
 Reports are saved to `plagiarism-reports/{assignmentId}.json`.
 
-### `bun submit`
+### `bun run submit`
 
 Submits AI grading feedback to Kriit.
 
 ```bash
-bun submit "Mari Maasikas" 42    # Submit single assignment
-bun submit --all                 # Submit all with ai_feedback.md
-bun submit --dry-run             # Preview without submitting
+bun run submit "Mari Maasikas" 42    # Submit single assignment
+bun run submit --all                 # Submit all with ai_feedback.md
+bun run submit --dry-run             # Preview without submitting
 ```
 
 The tool looks for `ai_feedback.md` in each assignment directory.
