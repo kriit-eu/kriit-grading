@@ -18,11 +18,22 @@ This two-tier approach ensures that clear passes are processed quickly while any
 
 - **Numeric grades** (`1`-`5`) - Claude evaluates each criterion and calculates a grade based on completion percentage. Grade `5` requires all criteria met with quality code. Lower grades reflect partial completion or quality issues. Detailed feedback explains which criteria passed/failed and why.
 
+## Requirements
+
+Only two external dependencies need to be installed on a fresh macOS:
+
+| Dependency | Installation | Purpose |
+|------------|--------------|---------|
+| **Bun** | `curl -fsSL https://bun.sh/install \| bash` | JavaScript runtime and package manager |
+| **Git** | `xcode-select --install` | Cloning student repositories |
+
 ## Installation
 
 ```bash
 git clone https://github.com/kriit-eu/kriit-grading.git
 cd kriit-grading
+bun install
+cd web && bun install && cd ..
 bun run setup
 ```
 
@@ -135,11 +146,28 @@ After authentication, restart Claude Code.
 bun run setup:gdrive
 ```
 
+## Web Dashboard
+
+Real-time dashboard showing grading progress. Start the server:
+
+```bash
+bun start
+```
+
+Open http://localhost:3000 to see:
+- Statistics cards (assignments, submissions, ungraded)
+- Progress bar during operations
+- Clone/submit status per student
+- Plagiarism matches with similarity scores
+
+The dashboard updates automatically as CLI commands run.
+
 ## Workflow
 
 The grading process follows these steps:
 
 ```
+bun start           → Start web dashboard (optional)
 bun run list        → Fetch ungraded assignments
 bun run clone       → Clone student repositories
 bun run plagiarism  → Check for plagiarism
@@ -255,7 +283,15 @@ kriit-grading/
 │   ├── list.js           # Fetch ungraded assignments
 │   ├── clone.js          # Clone repositories
 │   ├── plagiarism.js     # Plagiarism detection
-│   └── submit.js         # Submit feedback
+│   ├── submit.js         # Submit feedback
+│   └── lib/
+│       └── notify.js     # Web dashboard notifications
+├── web/                  # SvelteKit dashboard
+│   ├── src/
+│   │   ├── routes/       # Pages and API endpoints
+│   │   └── lib/          # Components and stores
+│   └── package.json
+├── tests/                # Unit and e2e tests
 ├── student-grading/      # Cloned repos (gitignored)
 ├── plagiarism-reports/   # Detection reports (gitignored)
 └── grading-batch.json    # Current batch (gitignored)
