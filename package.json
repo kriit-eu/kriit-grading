@@ -8,6 +8,7 @@
     "clone": "bun src/clone.js",
     "plagiarism": "bun src/plagiarism.js",
     "submit": "bun src/submit.js",
+    "clean": "bun src/clean.js",
     "setup": "test -f .env && echo '.env already exists - not overwriting' || (cp .env.example .env && echo 'Created .env - please configure your API credentials')",
     "setup:gdrive": "bash scripts/setup-gdrive.sh",
     "test": "bun test",
