@@ -38,6 +38,7 @@ export interface GradingState {
   lastUpdated: string | null;
   workingDirectory: string | null;
   serverStartedAt: string | null;
+  kriitUrl: string | null;
 }
 
 const initialState: GradingState = {
@@ -51,7 +52,8 @@ const initialState: GradingState = {
   connected: false,
   lastUpdated: null,
   workingDirectory: null,
-  serverStartedAt: null
+  serverStartedAt: null,
+  kriitUrl: null
 };
 
 function createGradingStore() {
@@ -112,6 +114,7 @@ function createGradingStore() {
               errors: event.data.errors as string[],
               workingDirectory: event.data.workingDirectory as string | null,
               serverStartedAt: event.data.serverStartedAt as string | null,
+              kriitUrl: event.data.kriitUrl as string | null,
               connected: true
             };
 

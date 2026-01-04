@@ -107,6 +107,14 @@
           <span class="flex-shrink-0">
             {#if submission.isGraded}
               <span class="badge bg-success-500 text-white">Hinnatud</span>
+            {:else if $gradingStore.kriitUrl}
+              <a
+                href="{$gradingStore.kriitUrl}/assignments/{submission.assignmentId}/students/{submission.userId}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="badge bg-warning-500 text-warning-900 hover:bg-warning-600 transition-colors"
+                on:click|stopPropagation
+              >Hindamata ↗</a>
             {:else}
               <span class="badge bg-warning-500 text-warning-900">Hindamata</span>
             {/if}

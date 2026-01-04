@@ -37,6 +37,7 @@ export interface GradingState {
   lastUpdated: string | null;
   workingDirectory: string;
   serverStartedAt: string;
+  kriitUrl: string | null;
 }
 
 // Get project root (parent of 'web' directory) and replace home dir with ~
@@ -44,6 +45,9 @@ const projectRoot = resolve(process.cwd(), '..').replace(process.env.HOME || '',
 
 // Server start time (set once when module loads)
 const serverStartedAt = new Date().toISOString();
+
+// Kriit URL from environment (remove trailing slash)
+const kriitUrl = (process.env.KRIIT_API_URL || '').replace(/\/$/, '') || null;
 
 // In-memory state
 const state: GradingState = {
@@ -56,7 +60,8 @@ const state: GradingState = {
   errors: [],
   lastUpdated: null,
   workingDirectory: projectRoot,
-  serverStartedAt
+  serverStartedAt,
+  kriitUrl
 };
 
 // SSE clients - using a Set of controller callbacks
@@ -84,7 +89,8 @@ export function getStateForClient(): Record<string, unknown> {
     errors: state.errors,
     lastUpdated: state.lastUpdated,
     workingDirectory: state.workingDirectory,
-    serverStartedAt: state.serverStartedAt
+    serverStartedAt: state.serverStartedAt,
+    kriitUrl: state.kriitUrl
   };
 }
 
