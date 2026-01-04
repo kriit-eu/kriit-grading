@@ -27,15 +27,7 @@ async function fetchUngradedBatch() {
     console.log(`🔍 Fetching from: ${config.apiUrl}/api/grading/getUngradedBatch`);
   }
 
-  // 404 means no ungraded assignments - not an error
-  const response = await apiGet('/api/grading/getUngradedBatch', { allowedStatuses: [404] });
-
-  // Normalize 404 response to empty data
-  if (response.status === 404) {
-    return { data: [] };
-  }
-
-  return response;
+  return apiGet('/api/grading/getUngradedBatch');
 }
 
 function displaySummary(data) {
