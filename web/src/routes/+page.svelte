@@ -21,7 +21,6 @@
 
 	<!-- Statistics Cards -->
 	<StatCards
-		totalAssignments={$gradingStore.assignments.length}
 		totalSubmissions={$totalSubmissions}
 		totalUngraded={$totalUngraded}
 		plagiarismMatches={$gradingStore.plagiarismMatches.length}

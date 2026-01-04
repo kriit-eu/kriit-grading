@@ -1,5 +1,4 @@
 <script lang="ts">
-  export let totalAssignments: number = 0;
   export let totalSubmissions: number = 0;
   export let totalUngraded: number = 0;
   export let plagiarismMatches: number = 0;
@@ -9,18 +8,13 @@
   $: gradedPercent = totalSubmissions > 0 ? ((gradedCount / totalSubmissions) * 100).toFixed(0) : '0';
 </script>
 
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-  <div class="card p-4 variant-soft-surface">
-    <div class="text-sm text-surface-600 mb-1">Ülesanded</div>
-    <div class="text-2xl font-bold">{totalAssignments}</div>
-  </div>
-
+<div class="grid grid-cols-3 gap-4">
   <div class="card p-4 variant-soft-surface">
     <div class="text-sm text-surface-600 mb-1">Esitused kokku</div>
     <div class="text-2xl font-bold">{totalSubmissions}</div>
   </div>
 
-  <div class="card p-4 variant-soft-primary">
+  <div class="card p-4" class:variant-soft-warning={totalUngraded > 0} class:variant-soft-success={totalUngraded === 0}>
     <div class="text-sm mb-1">Hindamata</div>
     <div class="text-2xl font-bold">{totalUngraded}</div>
     <div class="text-xs text-surface-600">
