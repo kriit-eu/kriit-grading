@@ -104,6 +104,12 @@ export function handleEvent(event: GradingEvent): void {
     case 'list:start':
       state.currentOperation = 'list';
       state.assignments = [];
+      // Reset all state for new grading session
+      state.submissions.clear();
+      state.messages.clear();
+      state.plagiarismMatches = [];
+      state.progress = { completed: 0, total: 0, failed: 0 };
+      state.errors = [];
       break;
 
     case 'list:complete':
