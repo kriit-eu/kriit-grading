@@ -29,12 +29,14 @@ export async function apiFetch(endpoint, options = {}) {
 /**
  * Make a GET request to the API
  * @param {string} endpoint
+ * @param {object} options - Additional options
+ * @param {number[]} options.allowedStatuses - HTTP statuses to allow without throwing (default: [])
  * @returns {Promise<object>}
  */
-export async function apiGet(endpoint) {
+export async function apiGet(endpoint, { allowedStatuses = [] } = {}) {
   const response = await apiFetch(endpoint, { method: 'GET' });
 
-  if (!response.ok) {
+  if (!response.ok && !allowedStatuses.includes(response.status)) {
     throw new Error(`API error: ${response.status} ${response.statusText}`);
   }
 
