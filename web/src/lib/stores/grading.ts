@@ -35,6 +35,7 @@ export interface GradingState {
   errors: string[];
   connected: boolean;
   lastUpdated: string | null;
+  workingDirectory: string | null;
 }
 
 const initialState: GradingState = {
@@ -46,7 +47,8 @@ const initialState: GradingState = {
   messages: {},
   errors: [],
   connected: false,
-  lastUpdated: null
+  lastUpdated: null,
+  workingDirectory: null
 };
 
 function createGradingStore() {
@@ -105,6 +107,7 @@ function createGradingStore() {
               plagiarismMatches: event.data.plagiarismMatches as Array<{ students: string[]; similarity: number; assignmentId: number }>,
               messages: (event.data.messages as Record<string, Message[]>) || {},
               errors: event.data.errors as string[],
+              workingDirectory: event.data.workingDirectory as string | null,
               connected: true
             };
 

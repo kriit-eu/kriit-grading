@@ -55,7 +55,7 @@
 	<!-- Last Updated -->
 	{#if $gradingStore.lastUpdated}
 		<p class="text-sm text-surface-500 text-right">
-			Viimati uuendatud: {new Date($gradingStore.lastUpdated).toLocaleString('et-EE')}
+			{$gradingStore.workingDirectory} · Viimati uuendatud: {new Date($gradingStore.lastUpdated).toLocaleString('et-EE')}
 		</p>
 	{/if}
 </div>

@@ -3,6 +3,8 @@
  * Maintains in-memory state and broadcasts to SSE clients.
  */
 
+import { resolve } from 'path';
+
 export interface GradingEvent {
   type: string;
   data: Record<string, unknown>;
@@ -33,7 +35,11 @@ export interface GradingState {
   messages: Map<string, Message[]>;
   errors: string[];
   lastUpdated: string | null;
+  workingDirectory: string;
 }
+
+// Get project root (parent of 'web' directory) and replace home dir with ~
+const projectRoot = resolve(process.cwd(), '..').replace(process.env.HOME || '', '~');
 
 // In-memory state
 const state: GradingState = {
@@ -44,7 +50,8 @@ const state: GradingState = {
   plagiarismMatches: [],
   messages: new Map(),
   errors: [],
-  lastUpdated: null
+  lastUpdated: null,
+  workingDirectory: projectRoot
 };
 
 // SSE clients - using a Set of controller callbacks
@@ -70,7 +77,8 @@ export function getStateForClient(): Record<string, unknown> {
     plagiarismMatches: state.plagiarismMatches,
     messages: messagesObj,
     errors: state.errors,
-    lastUpdated: state.lastUpdated
+    lastUpdated: state.lastUpdated,
+    workingDirectory: state.workingDirectory
   };
 }
 
