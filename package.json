@@ -10,7 +10,8 @@
     "submit": "bun src/submit.js",
     "setup": "test -f .env && echo '.env already exists - not overwriting' || (cp .env.example .env && echo 'Created .env - please configure your API credentials')",
     "setup:gdrive": "bash scripts/setup-gdrive.sh",
-    "test": "bun test"
+    "test": "bun test",
+    "start": "cd web && bun run build && bun build/index.js"
   },
   "keywords": [
     "grading",

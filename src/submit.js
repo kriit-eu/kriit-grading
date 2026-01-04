@@ -17,6 +17,7 @@ import { readdir } from 'fs/promises';
 import { join } from 'path';
 import { loadConfig, getWorkDir } from './config.js';
 import { apiPut } from './api.js';
+import { notify } from './lib/notify.js';
 
 const FEEDBACK_FILE = 'ai_feedback.md';
 
@@ -118,6 +119,7 @@ async function findGradedAssignments() {
 async function submitSingle(studentName, assignmentId) {
   try {
     console.log(`\n📝 Submitting: ${studentName} / Assignment #${assignmentId}`);
+    await notify('submit:progress', { student: studentName, assignmentId, status: 'submitting' });
 
     const gradingData = loadGradingData(studentName, assignmentId);
 
@@ -129,11 +131,13 @@ async function submitSingle(studentName, assignmentId) {
     await submitFeedback(gradingData);
 
     console.log('   ✅ Success');
+    await notify('submit:progress', { student: studentName, assignmentId, status: 'done' });
 
     return { status: 'success', studentName, assignmentId };
 
   } catch (error) {
     console.error(`   ❌ Failed: ${error.message}`);
+    await notify('submit:progress', { student: studentName, assignmentId, status: 'error', error: error.message });
     return { status: 'failed', studentName, assignmentId, error: error.message };
   }
 }
@@ -148,6 +152,7 @@ async function submitAll() {
     return { success: 0, failed: 0, results: [] };
   }
 
+  await notify('submit:start', { total: graded.length });
   console.log(`📋 Found ${graded.length} graded assignment(s)\n`);
   console.log('═'.repeat(70));
 
@@ -160,6 +165,8 @@ async function submitAll() {
 
   const success = results.filter(r => r.status === 'success').length;
   const failed = results.filter(r => r.status === 'failed').length;
+
+  await notify('submit:complete', { success, failed });
 
   return { success, failed, results };
 }
@@ -225,6 +232,7 @@ async function main() {
     }
 
   } catch (error) {
+    await notify('submit:error', { message: error.message });
     console.error('❌ Error:', error.message);
     if (flags.verbose) {
       console.error(error);

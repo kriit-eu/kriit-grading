@@ -10,6 +10,7 @@
 import { writeFile } from 'fs/promises';
 import { loadConfig, getBatchFilePath } from './config.js';
 import { apiGet } from './api.js';
+import { notify } from './lib/notify.js';
 
 // Parse command line flags
 const args = process.argv.slice(2);
@@ -64,6 +65,7 @@ function displaySummary(data) {
 
 async function main() {
   try {
+    await notify('list:start');
     console.log('🚀 Fetching ungraded assignments batch...');
 
     const data = await fetchUngradedBatch();
@@ -80,6 +82,23 @@ async function main() {
 
     displaySummary(data);
 
+    // Calculate totals for notification
+    const assignments = data?.data || [];
+    const totalSubmissions = assignments.reduce((sum, a) => sum + a.submissions.length, 0);
+    const totalUngraded = assignments.reduce((sum, a) => sum + a.submissions.filter(s => !s.isGraded).length, 0);
+
+    await notify('list:complete', {
+      totalAssignments: assignments.length,
+      totalSubmissions,
+      totalUngraded,
+      assignments: assignments.map(a => ({
+        id: a.assignmentId,
+        name: a.assignmentName,
+        submissions: a.submissions.length,
+        ungraded: a.submissions.filter(s => !s.isGraded).length
+      }))
+    });
+
     if (!flags.dryRun) {
       console.log(`💾 Batch data saved to: grading-batch.json`);
       console.log(`\nNext steps:`);
@@ -88,6 +107,7 @@ async function main() {
     }
 
   } catch (error) {
+    await notify('list:error', { message: error.message });
     console.error('❌ Error:', error.message);
     if (flags.verbose) {
       console.error(error);

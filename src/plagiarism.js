@@ -25,6 +25,7 @@ import { existsSync, readdirSync, readFileSync } from 'fs';
 import { mkdir, writeFile, readdir } from 'fs/promises';
 import { join, basename } from 'path';
 import { getWorkDir, getPlagiarismReportsDir } from './config.js';
+import { notify } from './lib/notify.js';
 
 const SIMILARITY_THRESHOLD = 0.85; // 85% similarity triggers plagiarism flag
 const STRUCTURAL_THRESHOLD = 0.75; // 75% for structural similarity
@@ -451,6 +452,7 @@ async function checkAssignmentPlagiarism(assignmentId) {
     return null;
   }
 
+  await notify('plagiarism:checking', { assignmentId, submissions: submissions.length });
   console.log(`🔍 Checking assignment #${assignmentId}: ${submissions.length} submission(s)`);
 
   // Get pair partnerships for this assignment from cloned data
@@ -508,7 +510,7 @@ async function checkAssignmentPlagiarism(assignmentId) {
         const original = sub1.submittedAt < sub2.submittedAt ? sub1 : sub2;
         const plagiarist = sub1.submittedAt < sub2.submittedAt ? sub2 : sub1;
 
-        suspiciousPairs.push({
+        const suspiciousPair = {
           similarity: Math.round(overallSimilarity * 100) / 100,
           originalAuthor: {
             studentName: original.studentName,
@@ -527,6 +529,13 @@ async function checkAssignmentPlagiarism(assignmentId) {
             evidence: m.evidence
           })),
           evidence: matches.map(m => `${m.file}: ${m.level} (${Math.round(m.similarity * 100)}%)`).join(', ')
+        };
+        suspiciousPairs.push(suspiciousPair);
+
+        await notify('plagiarism:match', {
+          assignmentId,
+          students: [original.studentName, plagiarist.studentName],
+          similarity: suspiciousPair.similarity
         });
 
         if (flags.verbose) {
@@ -584,6 +593,7 @@ async function main() {
     console.log('═'.repeat(70));
 
     const assignmentIds = findAllAssignmentIds();
+    await notify('plagiarism:start', { totalAssignments: assignmentIds.length });
 
     if (assignmentIds.length === 0) {
       console.log('✓ No assignments to check');
@@ -621,6 +631,12 @@ async function main() {
     console.log(`   Suspicious pairs found: ${totalSuspicious}`);
     console.log(`   Reports with findings: ${reports.length}`);
 
+    await notify('plagiarism:complete', {
+      assignmentsChecked: assignmentIds.length,
+      suspiciousPairsFound: totalSuspicious,
+      reportsWithFindings: reports.length
+    });
+
     if (totalSuspicious > 0 && !flags.dryRun) {
       console.log(`\n📁 Reports saved to: ${reportsDir}/\n`);
       console.log(`Next steps:`);
@@ -629,6 +645,7 @@ async function main() {
     }
 
   } catch (error) {
+    await notify('plagiarism:error', { message: error.message });
     console.error('❌ Error:', error.message);
     if (flags.verbose) {
       console.error(error);

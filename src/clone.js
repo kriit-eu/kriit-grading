@@ -15,6 +15,7 @@ import { mkdir, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { $ } from 'bun';
 import { getBatchFilePath, getWorkDir } from './config.js';
+import { notify } from './lib/notify.js';
 
 // Parse command line flags
 const args = process.argv.slice(2);
@@ -55,10 +56,13 @@ async function cloneRepository(studentName, assignmentId, solutionUrl, assignmen
       if (flags.verbose) {
         console.log(`⏭️  Skipped: ${studentName}/${assignmentId} (already exists)`);
       }
+      await notify('clone:progress', { student: studentName, assignmentId, status: 'skipped' });
       return { status: 'skipped', studentName, assignmentId, reason: 'already exists' };
     }
 
     // Clone repository
+    await notify('clone:progress', { student: studentName, assignmentId, status: 'cloning' });
+
     if (!flags.dryRun) {
       // Create parent directory only
       await mkdir(studentDir, { recursive: true });
@@ -77,6 +81,7 @@ async function cloneRepository(studentName, assignmentId, solutionUrl, assignmen
       console.log(`✅ Cloned: ${studentName}/${assignmentId}`);
     }
 
+    await notify('clone:progress', { student: studentName, assignmentId, status: 'done' });
     return { status: 'success', studentName, assignmentId };
 
   } catch (error) {
@@ -84,6 +89,7 @@ async function cloneRepository(studentName, assignmentId, solutionUrl, assignmen
       console.error(`❌ Failed: ${studentName}/${assignmentId} - ${error.message}`);
     }
 
+    await notify('clone:progress', { student: studentName, assignmentId, status: 'failed', error: error.message });
     return {
       status: 'failed',
       studentName,
@@ -149,6 +155,7 @@ async function cloneAllRepositories(assignments) {
     return { success: 0, failed: 0, skipped: 0, results: [] };
   }
 
+  await notify('clone:start', { total: tasks.length });
   console.log(`🔄 Cloning ${tasks.length} repositories in parallel...\n`);
 
   // Execute all clones in parallel
@@ -158,6 +165,12 @@ async function cloneAllRepositories(assignments) {
   const success = results.filter(r => r.status === 'success');
   const failed = results.filter(r => r.status === 'failed');
   const skipped = results.filter(r => r.status === 'skipped');
+
+  await notify('clone:complete', {
+    success: success.length,
+    failed: failed.length,
+    skipped: skipped.length
+  });
 
   return {
     success: success.length,
@@ -215,6 +228,7 @@ async function main() {
     }
 
   } catch (error) {
+    await notify('clone:error', { message: error.message });
     console.error('❌ Error:', error.message);
     if (flags.verbose) {
       console.error(error);
