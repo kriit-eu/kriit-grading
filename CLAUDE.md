@@ -16,11 +16,11 @@ bun install                 # Install dependencies
 bun run setup               # Create .env from template
 # Edit .env with your API credentials
 
-bun list                    # Fetch ungraded assignments
-bun clone                   # Clone student repositories
-bun plagiarism              # Check for plagiarism
+bun run list                # Fetch ungraded assignments
+bun run clone               # Clone student repositories
+bun run plagiarism          # Check for plagiarism
 # Grade each submission...
-bun submit --all            # Submit feedback
+bun run submit --all        # Submit feedback
 ```
 
 ---
@@ -77,7 +77,7 @@ probleem.
 ### Samm 1: Hangi hindamata tööd
 
 ```bash
-bun list
+bun run list
 # Or manually:
 xh GET 'http://localhost:8000/api/grading/getUngradedBatch' \
   Authorization:'Bearer <API_KEY>'
@@ -86,7 +86,7 @@ xh GET 'http://localhost:8000/api/grading/getUngradedBatch' \
 ### Samm 2: Klooni repositooriumid
 
 ```bash
-bun clone
+bun run clone
 ```
 
 **Kataloogistruktuur:**
@@ -130,7 +130,7 @@ Kui `solutionUrl` sisaldab `drive.google.com`:
 **KRIITILINE: Käivita ALATI enne hindamist!**
 
 ```bash
-bun plagiarism
+bun run plagiarism
 ```
 
 See tuvastab 4 tasemel:
@@ -376,7 +376,7 @@ Muuda varem esitatud tagasisidet.
 Enne tagasiside esitamist veendu:
 
 - [ ] Kloonisin repositooriumi
-- [ ] Käivitasin `bun plagiarism`
+- [ ] Käivitasin `bun run plagiarism`
 - [ ] Kontrollisin plagiaadiraportit
 - [ ] Testisin koodi Dockeriga (mitte ainult lugesin)
 - [ ] Tagasiside on EESTI KEELES
