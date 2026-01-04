@@ -36,10 +36,14 @@ export interface GradingState {
   errors: string[];
   lastUpdated: string | null;
   workingDirectory: string;
+  serverStartedAt: string;
 }
 
 // Get project root (parent of 'web' directory) and replace home dir with ~
 const projectRoot = resolve(process.cwd(), '..').replace(process.env.HOME || '', '~');
+
+// Server start time (set once when module loads)
+const serverStartedAt = new Date().toISOString();
 
 // In-memory state
 const state: GradingState = {
@@ -51,7 +55,8 @@ const state: GradingState = {
   messages: new Map(),
   errors: [],
   lastUpdated: null,
-  workingDirectory: projectRoot
+  workingDirectory: projectRoot,
+  serverStartedAt
 };
 
 // SSE clients - using a Set of controller callbacks
@@ -78,7 +83,8 @@ export function getStateForClient(): Record<string, unknown> {
     messages: messagesObj,
     errors: state.errors,
     lastUpdated: state.lastUpdated,
-    workingDirectory: state.workingDirectory
+    workingDirectory: state.workingDirectory,
+    serverStartedAt: state.serverStartedAt
   };
 }
 

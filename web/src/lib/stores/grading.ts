@@ -36,6 +36,7 @@ export interface GradingState {
   connected: boolean;
   lastUpdated: string | null;
   workingDirectory: string | null;
+  serverStartedAt: string | null;
 }
 
 const initialState: GradingState = {
@@ -48,7 +49,8 @@ const initialState: GradingState = {
   errors: [],
   connected: false,
   lastUpdated: null,
-  workingDirectory: null
+  workingDirectory: null,
+  serverStartedAt: null
 };
 
 function createGradingStore() {
@@ -108,6 +110,7 @@ function createGradingStore() {
               messages: (event.data.messages as Record<string, Message[]>) || {},
               errors: event.data.errors as string[],
               workingDirectory: event.data.workingDirectory as string | null,
+              serverStartedAt: event.data.serverStartedAt as string | null,
               connected: true
             };
 

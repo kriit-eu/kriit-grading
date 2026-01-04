@@ -52,10 +52,13 @@
 		</div>
 	{/if}
 
-	<!-- Last Updated -->
-	{#if $gradingStore.lastUpdated}
-		<p class="text-sm text-surface-500 text-right">
-			{$gradingStore.workingDirectory} · Viimati uuendatud: {new Date($gradingStore.lastUpdated).toLocaleString('et-EE')}
-		</p>
-	{/if}
+	<!-- Footer info -->
+	<div class="text-sm text-surface-500 text-right space-y-1">
+		{#if $gradingStore.serverStartedAt}
+			<p>Server käivitatud: {new Date($gradingStore.serverStartedAt).toLocaleString('et-EE')}</p>
+		{/if}
+		{#if $gradingStore.lastUpdated}
+			<p>{$gradingStore.workingDirectory} · Viimati uuendatud: {new Date($gradingStore.lastUpdated).toLocaleString('et-EE')}</p>
+		{/if}
+	</div>
 </div>
