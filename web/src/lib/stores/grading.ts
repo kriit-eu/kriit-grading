@@ -23,6 +23,7 @@ export interface Message {
   result: string;
   timestamp: string;
   failed: boolean;
+  success: boolean;
 }
 
 export interface GradingState {
@@ -216,18 +217,20 @@ function createGradingStore() {
             };
 
           case 'submission:message': {
-            const { submissionKey, action, result, failed } = event.data as {
+            const { submissionKey, action, result, failed, success } = event.data as {
               submissionKey: string;
               action: string;
               result: string;
               failed?: boolean;
+              success?: boolean;
             };
             const message: Message = {
               id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
               action,
               result: result || '',
               timestamp: event.timestamp,
-              failed: failed || false
+              failed: failed || false,
+              success: success || false
             };
             const existingMessages = newState.messages[submissionKey] || [];
             return {

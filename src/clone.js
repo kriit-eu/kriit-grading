@@ -93,7 +93,8 @@ async function cloneRepository(studentName, assignmentId, solutionUrl, assignmen
         submissionKey,
         action: 'Kloonimine õnnestus',
         result: `Kloonitud kausta: ${assignmentDir}`,
-        failed: false
+        failed: false,
+        success: true
       });
     }
 

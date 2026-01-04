@@ -237,6 +237,7 @@ async function submitSingle(studentName, assignmentId) {
       action: 'Esitamine õnnestus',
       result: result.message || 'OK',
       failed: false,
+      success: true,
     });
 
     return { status: 'success', studentName, assignmentId };

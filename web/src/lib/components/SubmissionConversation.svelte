@@ -38,11 +38,12 @@
       <div
         class="message mb-2 rounded text-sm overflow-hidden"
         class:bg-error-100={message.failed}
-        class:bg-surface-100={!message.failed}
+        class:bg-success-100={message.success && !message.failed}
+        class:bg-surface-100={!message.failed && !message.success}
       >
         <!-- Action (top part) - clickable to expand/collapse result -->
         <button
-          class="action w-full text-left p-2 font-medium text-surface-700 flex items-center gap-2 {message.failed ? 'hover:bg-error-200/50' : 'hover:bg-surface-200/50'}"
+          class="action w-full text-left p-2 font-medium text-surface-700 flex items-center gap-2 {message.failed ? 'hover:bg-error-200/50' : message.success ? 'hover:bg-success-200/50' : 'hover:bg-surface-200/50'}"
           on:click={() => message.result && toggleResult(message.id)}
           disabled={!message.result}
         >
