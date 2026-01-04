@@ -54,7 +54,7 @@
 {#if submissions.length === 0}
   <div class="card p-6 variant-soft-surface text-center">
     <p class="text-surface-600">Esitusi pole veel laaditud.</p>
-    <p class="text-sm text-surface-500 mt-2">Käivita <code class="bg-surface-200 px-1 rounded">cd kriit-grading && claude "Hinda kõik esitused"</code></p>
+    <p class="text-sm text-surface-500 mt-2">Käivita <code class="bg-surface-200 px-1 rounded">claude "Hinda kõik esitused"</code></p>
   </div>
 {:else}
   <div class="card variant-soft-surface overflow-hidden">
