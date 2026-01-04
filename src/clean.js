@@ -12,6 +12,7 @@
 import { existsSync } from 'fs';
 import { rm } from 'fs/promises';
 import { getWorkDir, getPlagiarismReportsDir, getBatchFilePath } from './config.js';
+import { notify } from './lib/notify.js';
 
 const args = process.argv.slice(2);
 const flags = {
@@ -57,6 +58,8 @@ async function main() {
     console.log(`Would remove ${removed} item(s)`);
   } else {
     console.log(`✓ Cleaned ${removed} item(s)`);
+    // Notify server to clear its state
+    await notify('clean:complete');
   }
 }
 

@@ -227,6 +227,17 @@ export function handleEvent(event: GradingEvent): void {
       state.messages.get(submissionKey)!.push(message);
       break;
     }
+
+    case 'clean:complete':
+      // Reset all state
+      state.currentOperation = null;
+      state.assignments = [];
+      state.submissions.clear();
+      state.progress = { completed: 0, total: 0, failed: 0 };
+      state.plagiarismMatches = [];
+      state.messages.clear();
+      state.errors = [];
+      break;
   }
 
   // Broadcast the event to all SSE clients
