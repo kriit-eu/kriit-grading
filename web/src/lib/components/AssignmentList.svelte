@@ -34,14 +34,6 @@
     expandedSubmissions = expandedSubmissions; // Trigger reactivity
   }
 
-  function getMessages(key: string): Message[] {
-    return $gradingStore.messages[key] || [];
-  }
-
-  function getCloneStatus(key: string): { status: string; error?: string } | null {
-    return $gradingStore.submissions[key] || null;
-  }
-
   function formatDate(dateStr: string | null): string {
     if (!dateStr) return '–';
     const date = new Date(dateStr);
@@ -64,8 +56,8 @@
   <div class="card variant-soft-surface overflow-hidden">
     {#each submissions as submission (submission.userId + '-' + submission.assignmentId)}
       {@const key = getSubmissionKey(submission)}
-      {@const messages = getMessages(key)}
-      {@const cloneStatus = getCloneStatus(key)}
+      {@const messages = $gradingStore.messages[key] || []}
+      {@const cloneStatus = $gradingStore.submissions[key]}
       {@const isExpanded = expandedSubmissions.has(key)}
       {@const hasMessages = messages.length > 0}
 
