@@ -58,7 +58,10 @@ async function main() {
     console.log(`Would remove ${removed} item(s)`);
   } else {
     console.log(`✓ Cleaned ${removed} item(s)`);
-    // Notify server to clear its state
+  }
+
+  // Always notify server to clear its state (unless dry-run)
+  if (!flags.dryRun) {
     await notify('clean:complete');
   }
 }
