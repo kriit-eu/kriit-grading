@@ -36,7 +36,7 @@ curl -fsSL https://bun.sh/install | bash
 
 **Bun** (Alpine - requires unzip):
 ```bash
-apk add curl unzip
+apk add curl unzip bash
 curl -fsSL https://bun.sh/install | bash
 ```
 
