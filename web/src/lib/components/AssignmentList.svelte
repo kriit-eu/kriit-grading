@@ -38,6 +38,10 @@
     return $gradingStore.messages[key] || [];
   }
 
+  function getCloneStatus(key: string): { status: string; error?: string } | null {
+    return $gradingStore.submissions[key] || null;
+  }
+
   function formatDate(dateStr: string | null): string {
     if (!dateStr) return '–';
     const date = new Date(dateStr);
@@ -61,6 +65,7 @@
     {#each submissions as submission (submission.userId + '-' + submission.assignmentId)}
       {@const key = getSubmissionKey(submission)}
       {@const messages = getMessages(key)}
+      {@const cloneStatus = getCloneStatus(key)}
       {@const isExpanded = expandedSubmissions.has(key)}
       {@const hasMessages = messages.length > 0}
 
@@ -91,7 +96,22 @@
           <!-- Date -->
           <span class="text-surface-500 text-sm flex-shrink-0 w-32">{formatDate(submission.submittedAt)}</span>
 
-          <!-- Status -->
+          <!-- Clone status -->
+          {#if cloneStatus}
+            <span class="flex-shrink-0">
+              {#if cloneStatus.status === 'cloning'}
+                <span class="badge bg-tertiary-500 text-white">Kloonin...</span>
+              {:else if cloneStatus.status === 'done'}
+                <span class="badge bg-success-500 text-white">Kloonitud</span>
+              {:else if cloneStatus.status === 'skipped'}
+                <span class="badge bg-surface-400 text-white">Vahele jäetud</span>
+              {:else if cloneStatus.status === 'failed'}
+                <span class="badge bg-error-500 text-white" title={cloneStatus.error}>Kloonimine ebaõnnestus</span>
+              {/if}
+            </span>
+          {/if}
+
+          <!-- Grading status -->
           <span class="flex-shrink-0">
             {#if submission.isGraded}
               <span class="badge bg-success-500 text-white">Hinnatud</span>
