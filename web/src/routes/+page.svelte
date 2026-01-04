@@ -4,6 +4,17 @@
 	import StatCards from '$lib/components/StatCards.svelte';
 	import AssignmentList from '$lib/components/AssignmentList.svelte';
 	import PlagiarismList from '$lib/components/PlagiarismList.svelte';
+
+	async function restartServer() {
+		try {
+			await fetch('/api/restart', { method: 'POST' });
+			// Server will restart, page will reconnect automatically
+		} catch {
+			// Expected - server is restarting
+		}
+		// Reload page after short delay
+		setTimeout(() => window.location.reload(), 2000);
+	}
 </script>
 
 <div class="space-y-6">
@@ -53,12 +64,20 @@
 	{/if}
 
 	<!-- Footer info -->
-	<div class="text-sm text-surface-500 text-right space-y-1">
-		{#if $gradingStore.serverStartedAt}
-			<p>Server käivitatud: {new Date($gradingStore.serverStartedAt).toLocaleString('et-EE')}</p>
-		{/if}
-		{#if $gradingStore.lastUpdated}
-			<p>{$gradingStore.workingDirectory} · Viimati uuendatud: {new Date($gradingStore.lastUpdated).toLocaleString('et-EE')}</p>
-		{/if}
+	<div class="text-sm text-surface-500 flex justify-between items-end">
+		<button
+			class="btn btn-sm variant-soft-surface"
+			on:click={restartServer}
+		>
+			Taaskäivita server
+		</button>
+		<div class="text-right space-y-1">
+			{#if $gradingStore.serverStartedAt}
+				<p>Server käivitatud: {new Date($gradingStore.serverStartedAt).toLocaleString('et-EE')}</p>
+			{/if}
+			{#if $gradingStore.lastUpdated}
+				<p>{$gradingStore.workingDirectory} · Viimati uuendatud: {new Date($gradingStore.lastUpdated).toLocaleString('et-EE')}</p>
+			{/if}
+		</div>
 	</div>
 </div>
