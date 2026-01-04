@@ -16,12 +16,21 @@ export interface Assignment {
   ungraded: number;
 }
 
+export interface Message {
+  id: string;
+  action: string;
+  result: string;
+  timestamp: string;
+  failed: boolean;
+}
+
 export interface GradingState {
   currentOperation: string | null;
   assignments: Assignment[];
   submissions: Map<string, { status: string; error?: string }>;
   progress: { completed: number; total: number; failed: number };
   plagiarismMatches: Array<{ students: string[]; similarity: number; assignmentId: number }>;
+  messages: Map<string, Message[]>;
   errors: string[];
   lastUpdated: string | null;
 }
@@ -33,6 +42,7 @@ const state: GradingState = {
   submissions: new Map(),
   progress: { completed: 0, total: 0, failed: 0 },
   plagiarismMatches: [],
+  messages: new Map(),
   errors: [],
   lastUpdated: null
 };
@@ -46,12 +56,19 @@ export function getState(): GradingState {
 }
 
 export function getStateForClient(): Record<string, unknown> {
+  // Convert messages Map to object with arrays
+  const messagesObj: Record<string, Message[]> = {};
+  for (const [key, msgs] of state.messages) {
+    messagesObj[key] = msgs;
+  }
+
   return {
     currentOperation: state.currentOperation,
     assignments: state.assignments,
     submissions: Object.fromEntries(state.submissions),
     progress: state.progress,
     plagiarismMatches: state.plagiarismMatches,
+    messages: messagesObj,
     errors: state.errors,
     lastUpdated: state.lastUpdated
   };
@@ -169,6 +186,27 @@ export function handleEvent(event: GradingEvent): void {
       state.currentOperation = null;
       state.errors.push(event.data.message as string);
       break;
+
+    case 'submission:message': {
+      const { submissionKey, action, result, failed } = event.data as {
+        submissionKey: string;
+        action: string;
+        result: string;
+        failed?: boolean;
+      };
+      const message: Message = {
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        action,
+        result: result || '',
+        timestamp: event.timestamp,
+        failed: failed || false
+      };
+      if (!state.messages.has(submissionKey)) {
+        state.messages.set(submissionKey, []);
+      }
+      state.messages.get(submissionKey)!.push(message);
+      break;
+    }
   }
 
   // Broadcast the event to all SSE clients

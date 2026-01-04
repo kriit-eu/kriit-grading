@@ -3,7 +3,6 @@
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import StatCards from '$lib/components/StatCards.svelte';
 	import AssignmentList from '$lib/components/AssignmentList.svelte';
-	import SubmissionList from '$lib/components/SubmissionList.svelte';
 	import PlagiarismList from '$lib/components/PlagiarismList.svelte';
 </script>
 
@@ -27,21 +26,10 @@
 		connected={$gradingStore.connected}
 	/>
 
-	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-		<!-- Individual Submissions List -->
-		<div>
-			<h2 class="text-lg font-semibold mb-3">Esitused</h2>
-			<AssignmentList submissions={$allSubmissions} />
-		</div>
-
-		<!-- Submission Progress (shown when there are submissions being processed) -->
-		<div>
-			<h2 class="text-lg font-semibold mb-3">Esituste progress</h2>
-			<SubmissionList
-				submissions={$gradingStore.submissions}
-				title={$gradingStore.currentOperation === 'clone' ? 'Kloonimine' : 'Esitused'}
-			/>
-		</div>
+	<!-- Individual Submissions List -->
+	<div>
+		<h2 class="text-lg font-semibold mb-3">Esitused</h2>
+		<AssignmentList submissions={$allSubmissions} />
 	</div>
 
 	<!-- Plagiarism Matches (shown if any exist) -->

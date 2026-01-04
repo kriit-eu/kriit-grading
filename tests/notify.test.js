@@ -22,7 +22,9 @@ describe('notify', () => {
     expect(mockFetch).toHaveBeenCalledTimes(1);
     const [url, options] = mockFetch.mock.calls[0];
 
-    expect(url).toBe('http://localhost:3000/api/emit');
+    // Check URL uses configured port (WEB_PORT env var) or default 3000
+    const expectedPort = process.env.WEB_PORT || '3000';
+    expect(url).toBe(`http://localhost:${expectedPort}/api/emit`);
     expect(options.method).toBe('POST');
     expect(options.headers['Content-Type']).toBe('application/json');
 

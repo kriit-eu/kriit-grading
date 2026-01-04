@@ -49,6 +49,7 @@ async function cloneRepository(studentName, assignmentId, solutionUrl, assignmen
   const outputDir = getWorkDir();
   const studentDir = join(outputDir, studentName);
   const assignmentDir = join(studentDir, String(assignmentId));
+  const submissionKey = `${studentName}/${assignmentId}`;
 
   try {
     // Check if already cloned
@@ -57,24 +58,43 @@ async function cloneRepository(studentName, assignmentId, solutionUrl, assignmen
         console.log(`⏭️  Skipped: ${studentName}/${assignmentId} (already exists)`);
       }
       await notify('clone:progress', { student: studentName, assignmentId, status: 'skipped' });
+      await notify('submission:message', {
+        submissionKey,
+        action: 'Kloonimine vahele jäetud',
+        result: 'Repositoorium on juba kloonitud',
+        failed: false
+      });
       return { status: 'skipped', studentName, assignmentId, reason: 'already exists' };
     }
 
     // Clone repository
     await notify('clone:progress', { student: studentName, assignmentId, status: 'cloning' });
+    await notify('submission:message', {
+      submissionKey,
+      action: 'Kloonin projekti',
+      result: `git clone ${solutionUrl}`,
+      failed: false
+    });
 
     if (!flags.dryRun) {
       // Create parent directory only
       await mkdir(studentDir, { recursive: true });
 
       // Clone directly into target directory (git will create it)
-      await $`git clone ${solutionUrl} ${assignmentDir}`.quiet();
+      const result = await $`git clone ${solutionUrl} ${assignmentDir}`.quiet();
 
       // Save assignment data
       await writeFile(
         join(assignmentDir, 'assignment_data.json'),
         JSON.stringify(assignmentData, null, 2)
       );
+
+      await notify('submission:message', {
+        submissionKey,
+        action: 'Kloonimine õnnestus',
+        result: `Kloonitud kausta: ${assignmentDir}`,
+        failed: false
+      });
     }
 
     if (flags.verbose) {
@@ -90,6 +110,12 @@ async function cloneRepository(studentName, assignmentId, solutionUrl, assignmen
     }
 
     await notify('clone:progress', { student: studentName, assignmentId, status: 'failed', error: error.message });
+    await notify('submission:message', {
+      submissionKey,
+      action: 'Kloonimine ebaõnnestus',
+      result: error.message,
+      failed: true
+    });
     return {
       status: 'failed',
       studentName,

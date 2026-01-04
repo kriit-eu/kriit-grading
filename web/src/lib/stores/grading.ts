@@ -17,12 +17,21 @@ export interface Assignment {
   individualSubmissions?: IndividualSubmission[];
 }
 
+export interface Message {
+  id: string;
+  action: string;
+  result: string;
+  timestamp: string;
+  failed: boolean;
+}
+
 export interface GradingState {
   currentOperation: string | null;
   assignments: Assignment[];
   submissions: Record<string, { status: string; error?: string }>;
   progress: { completed: number; total: number; failed: number };
   plagiarismMatches: Array<{ students: string[]; similarity: number; assignmentId: number }>;
+  messages: Record<string, Message[]>;
   errors: string[];
   connected: boolean;
   lastUpdated: string | null;
@@ -34,6 +43,7 @@ const initialState: GradingState = {
   submissions: {},
   progress: { completed: 0, total: 0, failed: 0 },
   plagiarismMatches: [],
+  messages: {},
   errors: [],
   connected: false,
   lastUpdated: null
@@ -93,6 +103,7 @@ function createGradingStore() {
               submissions: event.data.submissions as Record<string, { status: string; error?: string }>,
               progress: event.data.progress as { completed: number; total: number; failed: number },
               plagiarismMatches: event.data.plagiarismMatches as Array<{ students: string[]; similarity: number; assignmentId: number }>,
+              messages: (event.data.messages as Record<string, Message[]>) || {},
               errors: event.data.errors as string[],
               connected: true
             };
@@ -197,6 +208,30 @@ function createGradingStore() {
               currentOperation: null,
               errors: [...newState.errors, event.data.message as string]
             };
+
+          case 'submission:message': {
+            const { submissionKey, action, result, failed } = event.data as {
+              submissionKey: string;
+              action: string;
+              result: string;
+              failed?: boolean;
+            };
+            const message: Message = {
+              id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              action,
+              result: result || '',
+              timestamp: event.timestamp,
+              failed: failed || false
+            };
+            const existingMessages = newState.messages[submissionKey] || [];
+            return {
+              ...newState,
+              messages: {
+                ...newState.messages,
+                [submissionKey]: [...existingMessages, message]
+              }
+            };
+          }
 
           default:
             return newState;
