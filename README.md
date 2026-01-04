@@ -20,12 +20,48 @@ This two-tier approach ensures that clear passes are processed quickly while any
 
 ## Requirements
 
-Only two external dependencies need to be installed on a fresh macOS:
+Only two external dependencies:
 
-| Dependency | Installation | Purpose |
-|------------|--------------|---------|
-| **Bun** | `curl -fsSL https://bun.sh/install \| bash` | JavaScript runtime and package manager |
-| **Git** | `xcode-select --install` | Cloning student repositories |
+| Dependency | Purpose |
+|------------|---------|
+| **Bun** | JavaScript runtime and package manager |
+| **Git** | Cloning student repositories |
+
+### Installation by OS
+
+**macOS:**
+```bash
+# Bun
+curl -fsSL https://bun.sh/install | bash
+
+# Git (via Xcode Command Line Tools)
+xcode-select --install
+```
+
+**Debian/Ubuntu:**
+```bash
+# Bun
+curl -fsSL https://bun.sh/install | bash
+
+# Git
+sudo apt update && sudo apt install -y git
+```
+
+**Fedora:**
+```bash
+# Bun
+curl -fsSL https://bun.sh/install | bash
+
+# Git
+sudo dnf install -y git
+```
+
+**Alpine:**
+```bash
+# Bun (requires glibc, not musl - use unzip method)
+apk add --no-cache curl unzip git
+curl -fsSL https://bun.sh/install | bash
+```
 
 ## Installation
 
