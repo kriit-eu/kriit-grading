@@ -226,20 +226,30 @@ Iga kriteeriumi kohta määra:
 
 ### Samm 8: Esita tagasiside
 
-```bash
-xh POST 'http://localhost:8000/api/grading/submitAiFeedback' \
-  Authorization:'Bearer <API_KEY>' \
-  assignmentId:=42 \
-  userId:=3 \
-  completedCriteria:='[1, 2, 3]' \
-  incompleteCriteria:='[]' \
-  criteriaNotEvaluated:='[]' \
-  suggestedGrade='5' \
-  feedbackText='Suurepärane töö! Kõik kriteeriumid täidetud.' \
-  isConfidentPass:=true \
-  autoApprove:=true \
-  confidenceScore:=0.95
+**Kirjuta `ai_grading.json` fail õpilase kausta:**
+
+```json
+{
+  "completedCriteria": [1, 2, 3],
+  "incompleteCriteria": [],
+  "criteriaNotEvaluated": [],
+  "suggestedGrade": "5",
+  "feedbackText": "Suurepärane töö! Kõik kriteeriumid täidetud.",
+  "isConfidentPass": true,
+  "autoApprove": true,
+  "confidenceScore": 0.95
+}
 ```
+
+**Seejärel käivita:**
+
+```bash
+bun run submit "Õpilase Nimi" 42
+# Või kõik korraga:
+bun run submit --all
+```
+
+**NB!** Ära tee otse API kutseid - kasuta alati `bun run submit` käsku, et dashboard saaks info kätte.
 
 ---
 
@@ -277,21 +287,13 @@ Muuda varem esitatud tagasisidet.
 
 ---
 
-## 4. Näited
+## 4. Näited (`ai_grading.json`)
 
 ### 4.1 Edukas hindamine (automaatne kinnitamine)
 
 ```json
 {
-  "assignmentId": 42,
-  "userId": 3,
-  "completedCriteria": [
-    1,
-    2,
-    3,
-    4,
-    5
-  ],
+  "completedCriteria": [1, 2, 3, 4, 5],
   "incompleteCriteria": [],
   "criteriaNotEvaluated": [],
   "suggestedGrade": "5",
@@ -306,19 +308,9 @@ Muuda varem esitatud tagasisidet.
 
 ```json
 {
-  "assignmentId": 42,
-  "userId": 3,
-  "completedCriteria": [
-    1,
-    2
-  ],
-  "incompleteCriteria": [
-    3,
-    4
-  ],
-  "criteriaNotEvaluated": [
-    5
-  ],
+  "completedCriteria": [1, 2],
+  "incompleteCriteria": [3, 4],
+  "criteriaNotEvaluated": [5],
   "suggestedGrade": "3",
   "feedbackText": "Töö vajab täiendamist.\n\n✅ Täidetud:\n- Skeem laadib korrektselt\n- Põhipäringud töötavad\n\n❌ Puudused:\n- Päring 11: MySQL Error 1054 - veeru nimi valesti\n- Päring 14: Puudub GROUP BY klausel\n\n❓ Ei saanud hinnata:\n- Kriteerium 5 nõuab live-serveri ligipääsu",
   "isConfidentPass": false,
@@ -331,13 +323,7 @@ Muuda varem esitatud tagasisidet.
 
 ```json
 {
-  "assignmentId": 42,
-  "userId": 3,
-  "completedCriteria": [
-    1,
-    2,
-    3
-  ],
+  "completedCriteria": [1, 2, 3],
   "incompleteCriteria": [],
   "criteriaNotEvaluated": [],
   "suggestedGrade": "A",
@@ -352,14 +338,8 @@ Muuda varem esitatud tagasisidet.
 
 ```json
 {
-  "assignmentId": 42,
-  "userId": 3,
   "completedCriteria": [],
-  "incompleteCriteria": [
-    1,
-    2,
-    3
-  ],
+  "incompleteCriteria": [1, 2, 3],
   "criteriaNotEvaluated": [],
   "suggestedGrade": "MA",
   "feedbackText": "🛑 HINDAMINE PEATATUD\n\nProjekti ei saa käivitada dokumenteeritud juhiste järgi:\n\n- README mainib 'schema.sql' faili, kuid see puudub repositooriumist\n- Pole selge, kas kasutada MySQL või PostgreSQL\n- Käivitusjuhised puuduvad\n\nÕpilane peab:\n1. Lisama puuduvad failid\n2. Täiendama README-d sammhaaval juhistega\n3. Määrama andmebaasi tüübi ja versiooni",

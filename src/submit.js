@@ -1,24 +1,27 @@
 #!/usr/bin/env bun
 
 /**
- * bun submit
+ * bun run submit
  *
  * Submits AI grading feedback for evaluated assignments.
  * Auto-detects grading context from directory structure and assignment_data.json.
- * Calls PUT /api/grading/editAiFeedback with feedback and context.
+ *
+ * For new submissions: reads ai_grading.json and calls POST /api/grading/submitAiFeedback
+ * For edits: reads ai_feedback.md and calls PUT /api/grading/editAiFeedback
  *
  * Usage:
- *   bun submit <studentName> <assignmentId>
- *   bun submit --all                        # Submit all graded assignments
+ *   bun run submit <studentName> <assignmentId>
+ *   bun run submit --all                        # Submit all graded assignments
  */
 
 import { existsSync, readFileSync } from 'fs';
 import { readdir } from 'fs/promises';
 import { join } from 'path';
 import { loadConfig, getWorkDir } from './config.js';
-import { apiPut } from './api.js';
+import { apiPost, apiPut } from './api.js';
 import { notify } from './lib/notify.js';
 
+const GRADING_FILE = 'ai_grading.json';
 const FEEDBACK_FILE = 'ai_feedback.md';
 
 // Parse command line arguments
@@ -33,62 +36,112 @@ const flags = {
 const positionalArgs = args.filter(a => !a.startsWith('-'));
 
 /**
- * Load assignment data and feedback from directory
+ * Load assignment data from directory
  */
-function loadGradingData(studentName, assignmentId) {
+function loadAssignmentData(studentName, assignmentId) {
   const studentDir = getWorkDir();
   const assignmentDir = join(studentDir, studentName, String(assignmentId));
   const dataFile = join(assignmentDir, 'assignment_data.json');
-  const feedbackFile = join(assignmentDir, FEEDBACK_FILE);
 
   if (!existsSync(dataFile)) {
     throw new Error(`assignment_data.json not found in ${assignmentDir}`);
   }
 
-  if (!existsSync(feedbackFile)) {
-    throw new Error(`${FEEDBACK_FILE} not found in ${assignmentDir}`);
-  }
-
-  const data = JSON.parse(readFileSync(dataFile, 'utf-8'));
-  const feedback = readFileSync(feedbackFile, 'utf-8');
-
-  return {
-    assignmentId: data.assignmentId,
-    userId: data.student.userId,
-    studentName: data.student.studentName,
-    feedback,
-    context: {
-      assignmentName: data.assignmentName,
-      instructions: data.assignmentInstructions,
-      criteria: data.criteria,
-    },
-  };
+  return JSON.parse(readFileSync(dataFile, 'utf-8'));
 }
 
 /**
- * Submit feedback to API
+ * Load grading data for new submission (ai_grading.json)
  */
-async function submitFeedback(gradingData) {
-  const config = loadConfig();
+function loadGradingJson(studentName, assignmentId) {
+  const studentDir = getWorkDir();
+  const assignmentDir = join(studentDir, studentName, String(assignmentId));
+  const gradingFile = join(assignmentDir, GRADING_FILE);
 
+  if (!existsSync(gradingFile)) {
+    return null;
+  }
+
+  const grading = JSON.parse(readFileSync(gradingFile, 'utf-8'));
+
+  // Validate required fields
+  const required = ['completedCriteria', 'incompleteCriteria', 'criteriaNotEvaluated',
+    'suggestedGrade', 'feedbackText', 'isConfidentPass', 'autoApprove', 'confidenceScore'];
+
+  for (const field of required) {
+    if (grading[field] === undefined) {
+      throw new Error(`Missing required field '${field}' in ${GRADING_FILE}`);
+    }
+  }
+
+  return grading;
+}
+
+/**
+ * Load feedback text for edit (ai_feedback.md)
+ */
+function loadFeedbackMd(studentName, assignmentId) {
+  const studentDir = getWorkDir();
+  const assignmentDir = join(studentDir, studentName, String(assignmentId));
+  const feedbackFile = join(assignmentDir, FEEDBACK_FILE);
+
+  if (!existsSync(feedbackFile)) {
+    return null;
+  }
+
+  return readFileSync(feedbackFile, 'utf-8');
+}
+
+/**
+ * Submit new grading via POST /api/grading/submitAiFeedback
+ */
+async function submitNewGrading(assignmentData, gradingData) {
   const payload = {
-    userId: gradingData.userId,
-    assignmentId: gradingData.assignmentId,
-    feedbackText: gradingData.feedback,
+    assignmentId: assignmentData.assignmentId,
+    userId: assignmentData.student.userId,
+    completedCriteria: gradingData.completedCriteria,
+    incompleteCriteria: gradingData.incompleteCriteria,
+    criteriaNotEvaluated: gradingData.criteriaNotEvaluated,
+    suggestedGrade: gradingData.suggestedGrade,
+    feedbackText: gradingData.feedbackText,
+    isConfidentPass: gradingData.isConfidentPass,
+    autoApprove: gradingData.autoApprove,
+    confidenceScore: gradingData.confidenceScore,
   };
 
   if (flags.verbose) {
-    console.log(`📤 Submitting to: ${config.apiUrl}/api/grading/editAiFeedback`);
-    console.log(`   User ID: ${gradingData.userId}`);
-    console.log(`   Assignment ID: ${gradingData.assignmentId}`);
-    console.log(`   Feedback length: ${gradingData.feedback.length} chars`);
+    console.log(`   📤 POST /api/grading/submitAiFeedback`);
+    console.log(`   User ID: ${payload.userId}`);
+    console.log(`   Assignment ID: ${payload.assignmentId}`);
+    console.log(`   Grade: ${payload.suggestedGrade}`);
+    console.log(`   Auto-approve: ${payload.autoApprove}`);
+  }
+
+  return apiPost('/api/grading/submitAiFeedback', payload);
+}
+
+/**
+ * Edit existing feedback via PUT /api/grading/editAiFeedback
+ */
+async function editFeedback(assignmentData, feedbackText) {
+  const payload = {
+    assignmentId: assignmentData.assignmentId,
+    userId: assignmentData.student.userId,
+    feedbackText,
+  };
+
+  if (flags.verbose) {
+    console.log(`   📤 PUT /api/grading/editAiFeedback`);
+    console.log(`   User ID: ${payload.userId}`);
+    console.log(`   Assignment ID: ${payload.assignmentId}`);
+    console.log(`   Feedback length: ${feedbackText.length} chars`);
   }
 
   return apiPut('/api/grading/editAiFeedback', payload);
 }
 
 /**
- * Find all graded assignments (have ai_feedback.md file)
+ * Find all graded assignments (have ai_grading.json or ai_feedback.md)
  */
 async function findGradedAssignments() {
   const studentDir = getWorkDir();
@@ -102,14 +155,25 @@ async function findGradedAssignments() {
 
   for (const studentName of students) {
     const studentPath = join(studentDir, studentName);
-    const assignments = await readdir(studentPath);
 
-    for (const assignmentId of assignments) {
-      const feedbackFile = join(studentPath, assignmentId, FEEDBACK_FILE);
+    // Skip if not a directory
+    try {
+      const assignments = await readdir(studentPath);
 
-      if (existsSync(feedbackFile)) {
-        graded.push({ studentName, assignmentId: parseInt(assignmentId) });
+      for (const assignmentId of assignments) {
+        const gradingFile = join(studentPath, assignmentId, GRADING_FILE);
+        const feedbackFile = join(studentPath, assignmentId, FEEDBACK_FILE);
+
+        if (existsSync(gradingFile) || existsSync(feedbackFile)) {
+          graded.push({
+            studentName,
+            assignmentId: parseInt(assignmentId),
+            hasGradingJson: existsSync(gradingFile),
+          });
+        }
       }
+    } catch {
+      // Not a directory, skip
     }
   }
 
@@ -117,27 +181,75 @@ async function findGradedAssignments() {
 }
 
 async function submitSingle(studentName, assignmentId) {
+  const submissionKey = `${studentName}/${assignmentId}`;
+
   try {
     console.log(`\n📝 Submitting: ${studentName} / Assignment #${assignmentId}`);
     await notify('submit:progress', { student: studentName, assignmentId, status: 'submitting' });
+    await notify('submission:message', {
+      submissionKey,
+      action: 'Esitan hindamist',
+      result: '',
+      failed: false,
+    });
 
-    const gradingData = loadGradingData(studentName, assignmentId);
+    const assignmentData = loadAssignmentData(studentName, assignmentId);
+    const gradingJson = loadGradingJson(studentName, assignmentId);
+    const feedbackMd = loadFeedbackMd(studentName, assignmentId);
+
+    if (!gradingJson && !feedbackMd) {
+      throw new Error(`No ${GRADING_FILE} or ${FEEDBACK_FILE} found`);
+    }
 
     if (flags.dryRun) {
-      console.log('   🔍 DRY RUN: Would submit feedback');
+      const mode = gradingJson ? 'new submission' : 'edit';
+      console.log(`   🔍 DRY RUN: Would submit (${mode})`);
       return { status: 'dry-run', studentName, assignmentId };
     }
 
-    await submitFeedback(gradingData);
+    let result;
+    if (gradingJson) {
+      // New submission with full grading data
+      console.log(`   📊 New submission (${GRADING_FILE})`);
+      result = await submitNewGrading(assignmentData, gradingJson);
+      await notify('submission:message', {
+        submissionKey,
+        action: 'Esitan hindamist',
+        result: `Hinne: ${gradingJson.suggestedGrade}, Auto-approve: ${gradingJson.autoApprove}`,
+        failed: false,
+      });
+    } else {
+      // Edit existing feedback
+      console.log(`   ✏️  Edit feedback (${FEEDBACK_FILE})`);
+      result = await editFeedback(assignmentData, feedbackMd);
+      await notify('submission:message', {
+        submissionKey,
+        action: 'Muudan tagasisidet',
+        result: `${feedbackMd.length} tähemärki`,
+        failed: false,
+      });
+    }
 
     console.log('   ✅ Success');
     await notify('submit:progress', { student: studentName, assignmentId, status: 'done' });
+    await notify('submission:message', {
+      submissionKey,
+      action: 'Esitamine õnnestus',
+      result: result.message || 'OK',
+      failed: false,
+    });
 
     return { status: 'success', studentName, assignmentId };
 
   } catch (error) {
     console.error(`   ❌ Failed: ${error.message}`);
     await notify('submit:progress', { student: studentName, assignmentId, status: 'error', error: error.message });
+    await notify('submission:message', {
+      submissionKey,
+      action: 'Esitamine ebaõnnestus',
+      result: error.message,
+      failed: true,
+    });
     return { status: 'failed', studentName, assignmentId, error: error.message };
   }
 }
@@ -148,7 +260,7 @@ async function submitAll() {
   const graded = await findGradedAssignments();
 
   if (graded.length === 0) {
-    console.log('✓ No graded assignments found with ai_feedback.md');
+    console.log(`✓ No graded assignments found with ${GRADING_FILE} or ${FEEDBACK_FILE}`);
     return { success: 0, failed: 0, results: [] };
   }
 
@@ -208,11 +320,14 @@ async function main() {
       if (positionalArgs.length < 2) {
         console.error('❌ Error: Missing arguments');
         console.error('\nUsage:');
-        console.error('  bun submit <studentName> <assignmentId>');
-        console.error('  bun submit --all');
+        console.error('  bun run submit <studentName> <assignmentId>');
+        console.error('  bun run submit --all');
         console.error('\nOptions:');
         console.error('  --verbose, -v    Show detailed output');
         console.error('  --dry-run        Show what would be submitted without actually submitting');
+        console.error('\nFiles:');
+        console.error(`  ${GRADING_FILE}  - Full grading data (new submission)`);
+        console.error(`  ${FEEDBACK_FILE}    - Feedback text only (edit existing)`);
         process.exit(1);
       }
 
