@@ -77,13 +77,13 @@ async function cloneRepository(studentName, assignmentId, solutionUrl, assignmen
     });
 
     if (!flags.dryRun) {
-      // Create parent directory only
+      // Create parent directory
       await mkdir(studentDir, { recursive: true });
 
-      // Clone directly into target directory (git will create it)
+      // Clone repository into target directory (git creates assignmentDir)
       const result = await $`git clone ${solutionUrl} ${assignmentDir}`.quiet();
 
-      // Save assignment data
+      // Save assignment data after successful clone
       await writeFile(
         join(assignmentDir, 'assignment_data.json'),
         JSON.stringify(assignmentData, null, 2)
@@ -107,6 +107,19 @@ async function cloneRepository(studentName, assignmentId, solutionUrl, assignmen
   } catch (error) {
     if (flags.verbose) {
       console.error(`❌ Failed: ${studentName}/${assignmentId} - ${error.message}`);
+    }
+
+    // Still save assignment_data.json so grading can continue
+    if (!flags.dryRun) {
+      try {
+        await mkdir(assignmentDir, { recursive: true });
+        await writeFile(
+          join(assignmentDir, 'assignment_data.json'),
+          JSON.stringify(assignmentData, null, 2)
+        );
+      } catch {
+        // Ignore errors saving assignment data
+      }
     }
 
     await notify('clone:progress', { student: studentName, assignmentId, status: 'failed', error: error.message });

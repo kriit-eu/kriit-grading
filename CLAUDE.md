@@ -89,18 +89,22 @@ xh GET 'http://localhost:8000/api/grading/getUngradedBatch' \
 bun run clone
 ```
 
-**Kataloogistruktuur:**
+**TÄHTIS:** See käsk loob automaatselt kataloogistruktuuri JA `assignment_data.json` faili. Ära loo neid käsitsi!
+
+**Kataloogistruktuur (loodud automaatselt):**
 
 ```
 ./student-grading/
   ├── Mari Maasikas/
   │   └── 42/
-  │       ├── [kloonitud repo]
-  │       └── assignment_data.json
+  │       ├── [kloonitud repo failid]
+  │       └── assignment_data.json  ← AUTOMAATSELT LOODUD
   └── Jaan Tamm/
       └── 42/
-          └── [kloonitud repo]
+          └── [kloonitud repo failid]
 ```
+
+**Kui kloonimine ebaõnnestub** (nt vale URL), siis `assignment_data.json` luuakse ikkagi, et saaksid hindamist jätkata.
 
 ### Samm 2.5: Google Drive failid
 
