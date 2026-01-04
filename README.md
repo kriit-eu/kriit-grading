@@ -29,38 +29,30 @@ Only two external dependencies:
 
 ### Installation by OS
 
-**macOS:**
+**Bun** (macOS, Debian/Ubuntu, Fedora):
 ```bash
-# Bun
 curl -fsSL https://bun.sh/install | bash
+```
 
-# Git (via Xcode Command Line Tools)
+**Bun** (Alpine - requires unzip):
+```bash
+apk add --no-cache curl unzip
+curl -fsSL https://bun.sh/install | bash
+```
+
+**Git:**
+```bash
+# macOS
 xcode-select --install
-```
 
-**Debian/Ubuntu:**
-```bash
-# Bun
-curl -fsSL https://bun.sh/install | bash
-
-# Git
+# Debian/Ubuntu
 sudo apt update && sudo apt install -y git
-```
 
-**Fedora:**
-```bash
-# Bun
-curl -fsSL https://bun.sh/install | bash
-
-# Git
+# Fedora
 sudo dnf install -y git
-```
 
-**Alpine:**
-```bash
-# Bun (requires glibc, not musl - use unzip method)
-apk add --no-cache curl unzip git
-curl -fsSL https://bun.sh/install | bash
+# Alpine
+apk add --no-cache git
 ```
 
 ## Installation
