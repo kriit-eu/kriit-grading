@@ -11,7 +11,7 @@
     "setup": "test -f .env && echo '.env already exists - not overwriting' || (cp .env.example .env && echo 'Created .env - please configure your API credentials')",
     "setup:gdrive": "bash scripts/setup-gdrive.sh",
     "test": "bun test",
-    "start": "cd web && bun run build && bun build/index.js"
+    "start": "source .env 2>/dev/null; cd web && bun run build && PORT=${WEB_PORT:-3000} bun build/index.js"
   },
   "keywords": [
     "grading",
