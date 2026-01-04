@@ -1,11 +1,20 @@
 import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
 
+export interface IndividualSubmission {
+  userId: number;
+  studentName: string;
+  solutionUrl: string;
+  submittedAt: string | null;
+  isGraded: boolean;
+}
+
 export interface Assignment {
   id: number;
   name: string;
   submissions: number;
   ungraded: number;
+  individualSubmissions?: IndividualSubmission[];
 }
 
 export interface GradingState {
@@ -222,4 +231,34 @@ export const totalSubmissions = derived(
 export const totalUngraded = derived(
   gradingStore,
   $s => $s.assignments.reduce((sum, a) => sum + a.ungraded, 0)
+);
+
+// Flattened list of all individual submissions with assignment info
+export interface FlatSubmission extends IndividualSubmission {
+  assignmentId: number;
+  assignmentName: string;
+}
+
+export const allSubmissions = derived(
+  gradingStore,
+  $s => {
+    const submissions: FlatSubmission[] = [];
+    for (const assignment of $s.assignments) {
+      if (assignment.individualSubmissions) {
+        for (const sub of assignment.individualSubmissions) {
+          submissions.push({
+            ...sub,
+            assignmentId: assignment.id,
+            assignmentName: assignment.name
+          });
+        }
+      }
+    }
+    return submissions;
+  }
+);
+
+export const ungradedSubmissions = derived(
+  allSubmissions,
+  $subs => $subs.filter(s => !s.isGraded)
 );

@@ -11,6 +11,7 @@ import { writeFile } from 'fs/promises';
 import { loadConfig, getBatchFilePath } from './config.js';
 import { apiGet } from './api.js';
 import { notify } from './lib/notify.js';
+import { transformAssignmentsForNotification } from './lib/transformAssignments.js';
 
 // Parse command line flags
 const args = process.argv.slice(2);
@@ -91,12 +92,7 @@ async function main() {
       totalAssignments: assignments.length,
       totalSubmissions,
       totalUngraded,
-      assignments: assignments.map(a => ({
-        id: a.assignmentId,
-        name: a.assignmentName,
-        submissions: a.submissions.length,
-        ungraded: a.submissions.filter(s => !s.isGraded).length
-      }))
+      assignments: transformAssignmentsForNotification(assignments)
     });
 
     if (!flags.dryRun) {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { gradingStore, progressPercent, isOperationRunning, totalSubmissions, totalUngraded } from '$lib/stores/grading';
+	import { gradingStore, progressPercent, isOperationRunning, totalSubmissions, totalUngraded, allSubmissions } from '$lib/stores/grading';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import StatCards from '$lib/components/StatCards.svelte';
 	import AssignmentList from '$lib/components/AssignmentList.svelte';
@@ -29,10 +29,10 @@
 	/>
 
 	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-		<!-- Assignments List -->
+		<!-- Individual Submissions List -->
 		<div>
-			<h2 class="text-lg font-semibold mb-3">Ülesanded</h2>
-			<AssignmentList assignments={$gradingStore.assignments} />
+			<h2 class="text-lg font-semibold mb-3">Esitused</h2>
+			<AssignmentList submissions={$allSubmissions} />
 		</div>
 
 		<!-- Submission Progress (shown when there are submissions being processed) -->

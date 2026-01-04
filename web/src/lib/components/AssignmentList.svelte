@@ -1,12 +1,24 @@
 <script lang="ts">
-  import type { Assignment } from '$lib/stores/grading';
+  import type { FlatSubmission } from '$lib/stores/grading';
 
-  export let assignments: Assignment[] = [];
+  export let submissions: FlatSubmission[] = [];
+
+  function formatDate(dateStr: string | null): string {
+    if (!dateStr) return '–';
+    const date = new Date(dateStr);
+    return date.toLocaleString('et-EE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
 </script>
 
-{#if assignments.length === 0}
+{#if submissions.length === 0}
   <div class="card p-6 variant-soft-surface text-center">
-    <p class="text-surface-600">Ülesandeid pole veel laaditud.</p>
+    <p class="text-surface-600">Esitusi pole veel laaditud.</p>
     <p class="text-sm text-surface-500 mt-2">Käivita <code class="bg-surface-200 px-1 rounded">bun list</code> terminalis.</p>
   </div>
 {:else}
@@ -14,23 +26,26 @@
     <table class="table table-hover w-full">
       <thead>
         <tr class="bg-surface-200">
-          <th class="text-left p-3">ID</th>
+          <th class="text-left p-3">Õpilane</th>
           <th class="text-left p-3">Ülesanne</th>
-          <th class="text-right p-3">Esitused</th>
-          <th class="text-right p-3">Hindamata</th>
+          <th class="text-left p-3">Esitatud</th>
+          <th class="text-right p-3">Staatus</th>
         </tr>
       </thead>
       <tbody>
-        {#each assignments as assignment (assignment.id)}
+        {#each submissions as submission (submission.userId + '-' + submission.assignmentId)}
           <tr class="border-b border-surface-300">
-            <td class="p-3 text-surface-600">#{assignment.id}</td>
-            <td class="p-3 font-medium">{assignment.name}</td>
-            <td class="p-3 text-right">{assignment.submissions}</td>
+            <td class="p-3 font-medium">{submission.studentName}</td>
+            <td class="p-3 text-surface-600">
+              <span class="text-surface-400">#{submission.assignmentId}</span>
+              {submission.assignmentName}
+            </td>
+            <td class="p-3 text-surface-500 text-sm">{formatDate(submission.submittedAt)}</td>
             <td class="p-3 text-right">
-              {#if assignment.ungraded > 0}
-                <span class="badge bg-primary-500 text-primary-900">{assignment.ungraded}</span>
+              {#if submission.isGraded}
+                <span class="badge bg-success-500 text-white">Hinnatud</span>
               {:else}
-                <span class="text-success-600">0</span>
+                <span class="badge bg-warning-500 text-warning-900">Hindamata</span>
               {/if}
             </td>
           </tr>
