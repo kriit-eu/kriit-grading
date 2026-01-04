@@ -36,7 +36,7 @@ curl -fsSL https://bun.sh/install | bash
 
 **Bun** (Alpine - requires unzip):
 ```bash
-apk add --no-cache curl unzip
+apk add curl unzip
 curl -fsSL https://bun.sh/install | bash
 ```
 
@@ -46,13 +46,13 @@ curl -fsSL https://bun.sh/install | bash
 xcode-select --install
 
 # Debian/Ubuntu
-sudo apt update && sudo apt install -y git
+sudo apt install git
 
 # Fedora
-sudo dnf install -y git
+sudo dnf install git
 
 # Alpine
-apk add --no-cache git
+apk add git
 ```
 
 ## Installation
