@@ -1,11 +1,23 @@
 #!/bin/bash
-# Wrapper script that restarts the server when it exits
+# Wrapper script that builds, kills existing process, and restarts server in a loop
 
-cd "$(dirname "$0")/../web" || exit 1
+cd "$(dirname "$0")/.." || exit 1
 
+# Load environment
+source .env 2>/dev/null
+PORT=${WEB_PORT:-3000}
+
+# Kill any existing process on the port
+lsof -ti:$PORT | xargs kill 2>/dev/null
+
+# Build the project
+echo "Building..."
+cd web && bun run build || exit 1
+
+# Run server in a loop
 while true; do
-  echo "Starting server..."
-  node build
+  echo "Starting server on port $PORT..."
+  PORT=$PORT bun build/index.js
   EXIT_CODE=$?
 
   if [ $EXIT_CODE -eq 0 ]; then
