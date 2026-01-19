@@ -128,13 +128,6 @@
         >
           Hinda
         </button>
-        <button
-          type="button"
-          class="btn btn-sm bg-surface-600 text-white hover:bg-surface-500"
-          on:click={() => startClaude()}
-        >
-          Claude
-        </button>
       {:else}
         <button
           type="button"
