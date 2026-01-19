@@ -29,6 +29,7 @@ const flags = {
 /**
  * Normalize GitHub URL to a clonable repository URL.
  * Extracts user/repo from any GitHub URL and ignores paths, query strings, etc.
+ * Also handles raw.githubusercontent.com URLs.
  *
  * @param {string} url - The GitHub URL to normalize
  * @returns {string} - The normalized clone URL (https://github.com/user/repo.git)
@@ -36,9 +37,16 @@ const flags = {
 function normalizeGitHubUrl(url) {
   if (!url) return url;
 
+  // Match raw.githubusercontent.com URLs
+  // Format: https://raw.githubusercontent.com/{user}/{repo}/{branch-or-ref}/{path}
+  const rawMatch = url.match(/^https?:\/\/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)/);
+  if (rawMatch) {
+    const [, user, repo] = rawMatch;
+    return `https://github.com/${user}/${repo}.git`;
+  }
+
   // Match any GitHub URL and extract just user/repo (first two path segments)
   const githubMatch = url.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/?#]+)/);
-
   if (githubMatch) {
     const [, user, repo] = githubMatch;
     // Remove .git suffix if present
