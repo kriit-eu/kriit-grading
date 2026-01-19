@@ -7,24 +7,6 @@
 	import PlagiarismList from '$lib/components/PlagiarismList.svelte';
 	import Terminal from '$lib/components/Terminal.svelte';
 
-	let isCleaning = $state(false);
-
-	async function cleanFiles() {
-		if (isCleaning) return;
-		isCleaning = true;
-		try {
-			const response = await fetch('/api/clean', { method: 'POST' });
-			const result = await response.json();
-			if (!result.success) {
-				console.error('Clean failed:', result.error);
-			}
-		} catch (error) {
-			console.error('Clean error:', error);
-		} finally {
-			isCleaning = false;
-		}
-	}
-
 	async function restartServer() {
 		try {
 			await fetch('/api/restart', { method: 'POST' });
@@ -93,21 +75,12 @@
 
 		<!-- Footer info -->
 		<div class="text-sm text-surface-500 flex justify-between items-end">
-			<div class="flex gap-2">
-				<button
-					class="btn btn-sm variant-soft-surface"
-					onclick={cleanFiles}
-					disabled={isCleaning}
-				>
-					{isCleaning ? 'Puhastab...' : 'Puhasta'}
-				</button>
-				<button
-					class="btn btn-sm variant-soft-surface"
-					onclick={restartServer}
-				>
-					Taaskäivita server
-				</button>
-			</div>
+			<button
+				class="btn btn-sm variant-soft-surface"
+				onclick={restartServer}
+			>
+				Taaskäivita server
+			</button>
 			<div class="text-right space-y-1">
 				{#if $gradingStore.serverStartedAt}
 					<p>Server käivitatud: {new Date($gradingStore.serverStartedAt).toLocaleString('et-EE')}</p>

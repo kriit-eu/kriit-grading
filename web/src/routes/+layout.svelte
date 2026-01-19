@@ -9,10 +9,27 @@
 	let { children } = $props();
 	let settingsOpen = $state(false);
 	let settings = $state($settingsStore);
+	let isCleaning = $state(false);
 
 	settingsStore.subscribe(value => {
 		settings = value;
 	});
+
+	async function cleanFiles() {
+		if (isCleaning) return;
+		isCleaning = true;
+		try {
+			const response = await fetch('/api/clean', { method: 'POST' });
+			const result = await response.json();
+			if (!result.success) {
+				console.error('Clean failed:', result.error);
+			}
+		} catch (error) {
+			console.error('Clean error:', error);
+		} finally {
+			isCleaning = false;
+		}
+	}
 
 	onMount(() => {
 		gradingStore.connect();
@@ -35,6 +52,14 @@
 				Kriit Hindamisdashboard
 			</h1>
 			<div class="flex items-center gap-3">
+				<button
+					class="btn btn-sm variant-soft-surface"
+					onclick={cleanFiles}
+					disabled={isCleaning}
+					title="Kustuta kloonitud repod, plagiaadiraportid ja batch fail"
+				>
+					{isCleaning ? 'Puhastab...' : 'Puhasta'}
+				</button>
 				<span class="text-sm px-2 py-1 rounded {settings.environment === 'dev' ? 'bg-primary-500 text-white' : 'bg-warning-500 text-black'}">
 					{settings.environment === 'dev' ? 'DEV' : 'PROD'}
 				</span>
