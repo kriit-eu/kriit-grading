@@ -23,6 +23,8 @@
 			const result = await response.json();
 			if (!result.success) {
 				console.error('Clean failed:', result.error);
+			} else {
+				console.log('Clean result:', result.message);
 			}
 		} catch (error) {
 			console.error('Clean error:', error);
