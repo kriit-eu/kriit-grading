@@ -1,7 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
-	import { gradingStore } from '$lib/stores/grading';
+	import { gradingStore, totalSubmissions, totalUngraded } from '$lib/stores/grading';
 	import { settingsStore, getActiveUrl } from '$lib/stores/settings';
 	import { onMount, onDestroy } from 'svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
@@ -10,6 +10,8 @@
 	let settingsOpen = $state(false);
 	let settings = $state($settingsStore);
 	let isCleaning = $state(false);
+
+	let gradedPercent = $derived($totalSubmissions > 0 ? (($totalSubmissions - $totalUngraded) / $totalSubmissions * 100).toFixed(0) : '0');
 
 	settingsStore.subscribe(value => {
 		settings = value;
@@ -49,11 +51,25 @@
 
 <div class="min-h-screen bg-surface-50 dark:bg-surface-900" data-theme="skeleton">
 	<header class="bg-surface-200 dark:bg-surface-800 shadow-sm">
-		<div class="container mx-auto px-4 py-4 flex items-center justify-between">
+		<div class="px-4 py-3 flex items-center justify-between">
 			<h1 class="text-xl font-bold text-surface-900 dark:text-surface-50">
 				Kriit Hindamisdashboard
 			</h1>
-			<div class="flex items-center gap-3">
+			<div class="flex items-center gap-6">
+				<!-- Stats -->
+				<div class="flex items-center gap-6 text-sm">
+					<div class="text-surface-600 dark:text-surface-400">
+						<span class="font-semibold text-surface-900 dark:text-surface-100">{$totalSubmissions}</span> esitust
+					</div>
+					<div class="text-surface-600 dark:text-surface-400">
+						<span class="font-semibold" class:text-warning-600={$totalUngraded > 0} class:text-success-600={$totalUngraded === 0}>{$totalUngraded}</span> hindamata
+						<span class="text-xs">({gradedPercent}%)</span>
+					</div>
+					<div class="text-surface-600 dark:text-surface-400">
+						<span class="font-semibold" class:text-warning-600={$gradingStore.plagiarismMatches.length > 0}>{$gradingStore.plagiarismMatches.length}</span> plagiaati
+					</div>
+				</div>
+				<div class="w-px h-6 bg-surface-300 dark:bg-surface-600"></div>
 				<button
 					class="btn btn-sm variant-soft-surface"
 					onclick={cleanFiles}
@@ -79,7 +95,7 @@
 		</div>
 	</header>
 
-	<main class="container mx-auto px-4 py-6">
+	<main class="px-4 py-6">
 		{@render children()}
 	</main>
 </div>

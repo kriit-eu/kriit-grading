@@ -1,8 +1,6 @@
 <script lang="ts">
-	import { gradingStore, progressPercent, isOperationRunning, totalSubmissions, totalUngraded, allSubmissions } from '$lib/stores/grading';
-	import { isTerminalRunning } from '$lib/stores/terminal';
+	import { gradingStore, progressPercent, isOperationRunning, allSubmissions } from '$lib/stores/grading';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
-	import StatCards from '$lib/components/StatCards.svelte';
 	import AssignmentList from '$lib/components/AssignmentList.svelte';
 	import PlagiarismList from '$lib/components/PlagiarismList.svelte';
 	import Terminal from '$lib/components/Terminal.svelte';
@@ -20,14 +18,14 @@
 </script>
 
 <!-- Two-column responsive layout: terminal left, content right on wide screens -->
-<div class="flex flex-col lg:flex-row gap-6 h-full">
+<div class="flex flex-col lg:flex-row gap-6 h-full w-full">
 	<!-- Terminal (left side on wide, top on narrow) -->
-	<div class="lg:w-auto lg:max-w-[950px] flex-shrink-0">
+	<div class="lg:flex-1 lg:min-w-[600px] flex-shrink-0">
 		<Terminal />
 	</div>
 
 	<!-- Main content (right side on wide, bottom on narrow) -->
-	<div class="flex-1 space-y-6 min-w-0">
+	<div class="lg:flex-1 space-y-6 min-w-0">
 		<!-- Progress Bar - shown when operation is running -->
 		{#if $isOperationRunning}
 			<ProgressBar
@@ -38,14 +36,6 @@
 				operation={$gradingStore.currentOperation}
 			/>
 		{/if}
-
-		<!-- Statistics Cards -->
-		<StatCards
-			totalSubmissions={$totalSubmissions}
-			totalUngraded={$totalUngraded}
-			plagiarismMatches={$gradingStore.plagiarismMatches.length}
-			connected={$gradingStore.connected}
-		/>
 
 		<!-- Individual Submissions List -->
 		<div>

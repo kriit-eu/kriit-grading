@@ -8,6 +8,9 @@
   // Track expanded state per submission - all start collapsed
   let expandedSubmissions: Set<string> = new Set();
 
+  // Track if "Valmis" section is expanded - collapsed by default
+  let completedSectionExpanded = false;
+
   // Auto-expand submissions that have errors
   $: {
     for (const sub of submissions) {
@@ -22,6 +25,10 @@
       }
     }
   }
+
+  // Split submissions into active and completed
+  $: activeSubmissions = submissions.filter(s => !s.isGraded);
+  $: completedSubmissions = submissions.filter(s => s.isGraded);
 
   function getSubmissionKey(submission: FlatSubmission): string {
     return `${submission.studentName}/${submission.assignmentId}`;
@@ -87,76 +94,90 @@
   }
 </script>
 
+{#snippet submissionRow(submission: FlatSubmission)}
+  {@const key = getSubmissionKey(submission)}
+  {@const messages = $gradingStore.messages[key] || []}
+  {@const cloneStatus = $gradingStore.submissions[key]}
+  {@const isExpanded = expandedSubmissions.has(key)}
+  {@const hasMessages = messages.length > 0}
+  {@const statusBadge = getStatusBadge(submission, cloneStatus, messages)}
+  {@const hasError = statusBadge.text === 'Viga'}
+
+  <div class="border-b border-surface-300 last:border-b-0">
+    <button
+      class="w-full text-left px-3 py-2 flex items-center gap-3 hover:bg-surface-200 transition-colors"
+      class:cursor-pointer={hasMessages}
+      class:cursor-default={!hasMessages}
+      class:bg-error-50={hasError}
+      onclick={() => hasMessages && toggleExpanded(key)}
+    >
+      <span class="w-4 text-surface-400 flex-shrink-0">
+        {#if hasMessages}
+          {#if isExpanded}▼{:else}►{/if}
+        {/if}
+      </span>
+      <span class="font-medium flex-shrink-0 w-36 truncate">{submission.studentName}</span>
+      <span class="text-surface-600 flex-1 truncate text-sm">
+        <span class="text-surface-400">#{submission.assignmentId}</span>
+        {submission.assignmentName}
+      </span>
+      <span class="text-surface-500 text-xs flex-shrink-0">{formatDate(submission.submittedAt)}</span>
+      <span class="flex-shrink-0">
+        {#if statusBadge.text === 'Hindamata' && $gradingStore.kriitUrl}
+          <a
+            href="{$gradingStore.kriitUrl}/assignments/{submission.assignmentId}/students/{submission.userId}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="badge {statusBadge.class} hover:opacity-80 transition-opacity"
+            onclick={(e) => e.stopPropagation()}
+          >{statusBadge.text} ↗</a>
+        {:else}
+          <span class="badge {statusBadge.class}">{statusBadge.text}</span>
+        {/if}
+      </span>
+      {#if hasMessages}
+        <span class="badge bg-surface-300 text-surface-600 text-xs flex-shrink-0">{messages.length}</span>
+      {/if}
+    </button>
+    {#if isExpanded && hasMessages}
+      <SubmissionConversation {messages} />
+    {/if}
+  </div>
+{/snippet}
+
 {#if submissions.length === 0}
   <div class="card p-6 variant-soft-surface text-center">
     <p class="text-surface-600">Esitusi pole veel laaditud.</p>
     <p class="text-sm text-surface-500 mt-2">Käivita <code class="bg-surface-200 px-1 rounded">claude "Hinda kõik esitused"</code></p>
   </div>
 {:else}
-  <div class="card variant-soft-surface overflow-hidden">
-    {#each submissions as submission (submission.userId + '-' + submission.assignmentId)}
-      {@const key = getSubmissionKey(submission)}
-      {@const messages = $gradingStore.messages[key] || []}
-      {@const cloneStatus = $gradingStore.submissions[key]}
-      {@const isExpanded = expandedSubmissions.has(key)}
-      {@const hasMessages = messages.length > 0}
-      {@const statusBadge = getStatusBadge(submission, cloneStatus, messages)}
-      {@const hasError = statusBadge.text === 'Viga'}
+  <!-- Active submissions -->
+  {#if activeSubmissions.length > 0}
+    <div class="card variant-soft-surface overflow-hidden">
+      {#each activeSubmissions as submission (submission.userId + '-' + submission.assignmentId)}
+        {@render submissionRow(submission)}
+      {/each}
+    </div>
+  {/if}
 
-      <div class="border-b border-surface-300 last:border-b-0">
-        <!-- Submission row -->
-        <button
-          class="w-full text-left px-3 py-2 flex items-center gap-3 hover:bg-surface-200 transition-colors"
-          class:cursor-pointer={hasMessages}
-          class:cursor-default={!hasMessages}
-          class:bg-error-50={hasError}
-          on:click={() => hasMessages && toggleExpanded(key)}
-        >
-          <!-- Expand indicator -->
-          <span class="w-4 text-surface-400 flex-shrink-0">
-            {#if hasMessages}
-              {#if isExpanded}▼{:else}►{/if}
-            {/if}
-          </span>
-
-          <!-- Student name -->
-          <span class="font-medium flex-shrink-0 w-36 truncate">{submission.studentName}</span>
-
-          <!-- Assignment -->
-          <span class="text-surface-600 flex-1 truncate text-sm">
-            <span class="text-surface-400">#{submission.assignmentId}</span>
-            {submission.assignmentName}
-          </span>
-
-          <!-- Date -->
-          <span class="text-surface-500 text-xs flex-shrink-0">{formatDate(submission.submittedAt)}</span>
-
-          <!-- Status badge -->
-          <span class="flex-shrink-0">
-            {#if statusBadge.text === 'Hindamata' && $gradingStore.kriitUrl}
-              <a
-                href="{$gradingStore.kriitUrl}/assignments/{submission.assignmentId}/students/{submission.userId}"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="badge {statusBadge.class} hover:opacity-80 transition-opacity"
-                on:click|stopPropagation
-              >{statusBadge.text} ↗</a>
-            {:else}
-              <span class="badge {statusBadge.class}">{statusBadge.text}</span>
-            {/if}
-          </span>
-
-          <!-- Message count badge -->
-          {#if hasMessages}
-            <span class="badge bg-surface-300 text-surface-600 text-xs flex-shrink-0">{messages.length}</span>
-          {/if}
-        </button>
-
-        <!-- Conversation (expanded) -->
-        {#if isExpanded && hasMessages}
-          <SubmissionConversation {messages} />
-        {/if}
-      </div>
-    {/each}
-  </div>
+  <!-- Completed submissions (collapsible) -->
+  {#if completedSubmissions.length > 0}
+    <div class="card variant-soft-surface overflow-hidden mt-4">
+      <button
+        class="w-full text-left px-3 py-2 flex items-center gap-3 hover:bg-surface-200 transition-colors font-medium text-surface-600"
+        onclick={() => completedSectionExpanded = !completedSectionExpanded}
+      >
+        <span class="w-4 text-surface-400">
+          {#if completedSectionExpanded}▼{:else}►{/if}
+        </span>
+        <span>Valmis</span>
+        <span class="badge bg-success-500 text-white">{completedSubmissions.length}</span>
+      </button>
+      {#if completedSectionExpanded}
+        {#each completedSubmissions as submission (submission.userId + '-' + submission.assignmentId)}
+          {@render submissionRow(submission)}
+        {/each}
+      {/if}
+    </div>
+  {/if}
 {/if}
