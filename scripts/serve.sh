@@ -14,10 +14,10 @@ lsof -ti:$PORT | xargs kill 2>/dev/null
 echo "Building..."
 cd web && bun run build || exit 1
 
-# Run server in a loop
+# Run server in a loop (using Node.js for node-pty compatibility)
 while true; do
   echo "Starting server on port $PORT..."
-  PORT=$PORT bun build/index.js
+  PORT=$PORT node build/index.js
   EXIT_CODE=$?
 
   if [ $EXIT_CODE -eq 0 ]; then

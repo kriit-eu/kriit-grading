@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { gradingStore, progressPercent, isOperationRunning, totalSubmissions, totalUngraded, allSubmissions } from '$lib/stores/grading';
+	import { terminalStore, isTerminalVisible, isTerminalRunning } from '$lib/stores/terminal';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import StatCards from '$lib/components/StatCards.svelte';
 	import AssignmentList from '$lib/components/AssignmentList.svelte';
 	import PlagiarismList from '$lib/components/PlagiarismList.svelte';
+	import Terminal from '$lib/components/Terminal.svelte';
 
 	async function restartServer() {
 		try {
@@ -29,13 +31,33 @@
 		/>
 	{/if}
 
-	<!-- Statistics Cards -->
-	<StatCards
-		totalSubmissions={$totalSubmissions}
-		totalUngraded={$totalUngraded}
-		plagiarismMatches={$gradingStore.plagiarismMatches.length}
-		connected={$gradingStore.connected}
-	/>
+	<!-- Terminal Toggle + Statistics Cards -->
+	<div class="flex items-start gap-4">
+		<button
+			type="button"
+			class="btn {$isTerminalVisible ? 'variant-filled-primary' : 'variant-soft-primary'} flex items-center gap-2"
+			on:click={() => terminalStore.toggle()}
+		>
+			<span class="text-lg">{$isTerminalVisible ? '▼' : '▶'}</span>
+			Terminal
+			{#if $isTerminalRunning}
+				<span class="badge bg-success-500 text-xs px-1.5 py-0.5 rounded animate-pulse">●</span>
+			{/if}
+		</button>
+		<div class="flex-1">
+			<StatCards
+				totalSubmissions={$totalSubmissions}
+				totalUngraded={$totalUngraded}
+				plagiarismMatches={$gradingStore.plagiarismMatches.length}
+				connected={$gradingStore.connected}
+			/>
+		</div>
+	</div>
+
+	<!-- Terminal (collapsible) -->
+	{#if $isTerminalVisible}
+		<Terminal />
+	{/if}
 
 	<!-- Individual Submissions List -->
 	<div>
