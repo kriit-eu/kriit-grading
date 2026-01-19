@@ -26,6 +26,30 @@ const flags = {
   permissive: !args.includes('--strict'), // default to permissive
 };
 
+/**
+ * Normalize GitHub URL to a clonable repository URL.
+ * Extracts user/repo from any GitHub URL and ignores paths, query strings, etc.
+ *
+ * @param {string} url - The GitHub URL to normalize
+ * @returns {string} - The normalized clone URL (https://github.com/user/repo.git)
+ */
+function normalizeGitHubUrl(url) {
+  if (!url) return url;
+
+  // Match any GitHub URL and extract just user/repo (first two path segments)
+  const githubMatch = url.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/?#]+)/);
+
+  if (githubMatch) {
+    const [, user, repo] = githubMatch;
+    // Remove .git suffix if present
+    const cleanRepo = repo.replace(/\.git$/, '');
+    return `https://github.com/${user}/${cleanRepo}.git`;
+  }
+
+  // Not a GitHub URL, return as-is
+  return url;
+}
+
 function loadBatchData() {
   const batchFile = getBatchFilePath();
 
@@ -51,6 +75,9 @@ async function cloneRepository(studentName, assignmentId, solutionUrl, assignmen
   const assignmentDir = join(studentDir, String(assignmentId));
   const submissionKey = `${studentName}/${assignmentId}`;
 
+  // Normalize GitHub URL (extract base repo from tree/blob/etc paths)
+  const cloneUrl = normalizeGitHubUrl(solutionUrl);
+
   try {
     // Check if already cloned
     if (existsSync(join(assignmentDir, '.git'))) {
@@ -69,10 +96,15 @@ async function cloneRepository(studentName, assignmentId, solutionUrl, assignmen
 
     // Clone repository
     await notify('clone:progress', { student: studentName, assignmentId, status: 'cloning' });
+
+    // Log if URL was normalized
+    const urlNormalized = cloneUrl !== solutionUrl;
     await notify('submission:message', {
       submissionKey,
       action: 'Kloonin projekti',
-      result: `git clone ${solutionUrl}`,
+      result: urlNormalized
+        ? `git clone ${cloneUrl} (normaliseeritud URL-ist: ${solutionUrl})`
+        : `git clone ${cloneUrl}`,
       failed: false
     });
 
@@ -81,7 +113,7 @@ async function cloneRepository(studentName, assignmentId, solutionUrl, assignmen
       await mkdir(studentDir, { recursive: true });
 
       // Clone repository into target directory (git creates assignmentDir)
-      const result = await $`git clone ${solutionUrl} ${assignmentDir}`.quiet();
+      const result = await $`git clone ${cloneUrl} ${assignmentDir}`.quiet();
 
       // Save assignment data after successful clone
       await writeFile(
