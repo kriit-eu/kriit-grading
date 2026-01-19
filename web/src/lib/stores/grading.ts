@@ -245,6 +245,18 @@ function createGradingStore() {
             };
           }
 
+          case 'clean:complete':
+            return {
+              ...newState,
+              currentOperation: null,
+              assignments: [],
+              submissions: {},
+              progress: { completed: 0, total: 0, failed: 0 },
+              plagiarismMatches: [],
+              messages: {},
+              errors: []
+            };
+
           default:
             return newState;
         }
