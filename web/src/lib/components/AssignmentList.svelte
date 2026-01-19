@@ -5,16 +5,18 @@
 
   export let submissions: FlatSubmission[] = [];
 
-  // Track expanded state per submission - all start expanded by default
-  let expandedSubmissions: Set<string> = new Set(
-    submissions.map(s => getSubmissionKey(s))
-  );
+  // Track expanded state per submission - all start collapsed
+  let expandedSubmissions: Set<string> = new Set();
 
-  // Update expanded set when submissions change (add new ones as expanded)
+  // Auto-expand submissions that have errors
   $: {
     for (const sub of submissions) {
       const key = getSubmissionKey(sub);
-      if (!expandedSubmissions.has(key)) {
+      const messages = $gradingStore.messages[key] || [];
+      const cloneStatus = $gradingStore.submissions[key];
+      const hasError = messages.some(m => m.failed) || cloneStatus?.status === 'failed';
+
+      if (hasError && !expandedSubmissions.has(key)) {
         expandedSubmissions.add(key);
         expandedSubmissions = expandedSubmissions;
       }
@@ -45,6 +47,44 @@
       minute: '2-digit'
     });
   }
+
+  function getStatusBadge(submission: FlatSubmission, cloneStatus: { status: string; error?: string } | undefined, messages: Message[]): { text: string; class: string } {
+    // Check for errors first
+    if (cloneStatus?.status === 'failed') {
+      return { text: 'Viga', class: 'bg-error-500 text-white' };
+    }
+    if (messages.some(m => m.failed)) {
+      return { text: 'Viga', class: 'bg-error-500 text-white' };
+    }
+
+    // Check if graded
+    if (submission.isGraded) {
+      return { text: 'Valmis', class: 'bg-success-500 text-white' };
+    }
+
+    // Check clone status
+    if (cloneStatus?.status === 'cloning') {
+      return { text: 'Kloonin...', class: 'bg-tertiary-500 text-white' };
+    }
+
+    // Check last message action for current activity
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage) {
+      if (lastMessage.action.includes('Hindan') || lastMessage.action.includes('Analüüsin')) {
+        return { text: 'Hindamisel...', class: 'bg-tertiary-500 text-white' };
+      }
+      if (lastMessage.success) {
+        return { text: 'Kloonitud', class: 'bg-surface-400 text-white' };
+      }
+    }
+
+    if (cloneStatus?.status === 'done' || cloneStatus?.status === 'skipped') {
+      return { text: 'Kloonitud', class: 'bg-surface-400 text-white' };
+    }
+
+    // Default - waiting
+    return { text: 'Hindamata', class: 'bg-warning-500 text-warning-900' };
+  }
 </script>
 
 {#if submissions.length === 0}
@@ -60,17 +100,20 @@
       {@const cloneStatus = $gradingStore.submissions[key]}
       {@const isExpanded = expandedSubmissions.has(key)}
       {@const hasMessages = messages.length > 0}
+      {@const statusBadge = getStatusBadge(submission, cloneStatus, messages)}
+      {@const hasError = statusBadge.text === 'Viga'}
 
-      <div class="border-b border-surface-300">
+      <div class="border-b border-surface-300 last:border-b-0">
         <!-- Submission row -->
         <button
-          class="w-full text-left p-3 flex items-center gap-3 hover:bg-surface-200 transition-colors"
+          class="w-full text-left px-3 py-2 flex items-center gap-3 hover:bg-surface-200 transition-colors"
           class:cursor-pointer={hasMessages}
           class:cursor-default={!hasMessages}
+          class:bg-error-50={hasError}
           on:click={() => hasMessages && toggleExpanded(key)}
         >
           <!-- Expand indicator -->
-          <span class="w-4 text-surface-400">
+          <span class="w-4 text-surface-400 flex-shrink-0">
             {#if hasMessages}
               {#if isExpanded}▼{:else}►{/if}
             {/if}
@@ -80,49 +123,32 @@
           <span class="font-medium flex-shrink-0 w-36 truncate">{submission.studentName}</span>
 
           <!-- Assignment -->
-          <span class="text-surface-600 flex-1 truncate">
+          <span class="text-surface-600 flex-1 truncate text-sm">
             <span class="text-surface-400">#{submission.assignmentId}</span>
             {submission.assignmentName}
           </span>
 
           <!-- Date -->
-          <span class="text-surface-500 text-sm flex-shrink-0 w-32">{formatDate(submission.submittedAt)}</span>
+          <span class="text-surface-500 text-xs flex-shrink-0">{formatDate(submission.submittedAt)}</span>
 
-          <!-- Clone status -->
-          {#if cloneStatus}
-            <span class="flex-shrink-0">
-              {#if cloneStatus.status === 'cloning'}
-                <span class="badge bg-tertiary-500 text-white">Kloonin...</span>
-              {:else if cloneStatus.status === 'done'}
-                <span class="badge bg-success-500 text-white">Kloonitud</span>
-              {:else if cloneStatus.status === 'skipped'}
-                <span class="badge bg-surface-400 text-white">Vahele jäetud</span>
-              {:else if cloneStatus.status === 'failed'}
-                <span class="badge bg-error-500 text-white" title={cloneStatus.error}>Kloonimine ebaõnnestus</span>
-              {/if}
-            </span>
-          {/if}
-
-          <!-- Grading status -->
+          <!-- Status badge -->
           <span class="flex-shrink-0">
-            {#if submission.isGraded}
-              <span class="badge bg-success-500 text-white">Hinnatud</span>
-            {:else if $gradingStore.kriitUrl}
+            {#if statusBadge.text === 'Hindamata' && $gradingStore.kriitUrl}
               <a
                 href="{$gradingStore.kriitUrl}/assignments/{submission.assignmentId}/students/{submission.userId}"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="badge bg-warning-500 text-warning-900 hover:bg-warning-600 transition-colors"
+                class="badge {statusBadge.class} hover:opacity-80 transition-opacity"
                 on:click|stopPropagation
-              >Hindamata ↗</a>
+              >{statusBadge.text} ↗</a>
             {:else}
-              <span class="badge bg-warning-500 text-warning-900">Hindamata</span>
+              <span class="badge {statusBadge.class}">{statusBadge.text}</span>
             {/if}
           </span>
 
           <!-- Message count badge -->
           {#if hasMessages}
-            <span class="badge bg-surface-300 text-surface-600 text-xs">{messages.length}</span>
+            <span class="badge bg-surface-300 text-surface-600 text-xs flex-shrink-0">{messages.length}</span>
           {/if}
         </button>
 
