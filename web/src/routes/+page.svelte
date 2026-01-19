@@ -22,7 +22,7 @@
 <!-- Two-column responsive layout: terminal left, content right on wide screens -->
 <div class="flex flex-col lg:flex-row gap-6 h-full">
 	<!-- Terminal (left side on wide, top on narrow) -->
-	<div class="lg:w-1/2 xl:w-2/5 flex-shrink-0">
+	<div class="lg:w-auto lg:max-w-[950px] flex-shrink-0">
 		<Terminal />
 	</div>
 

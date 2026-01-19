@@ -61,7 +61,7 @@ export function registerClient(callback: SSEClient): () => void {
   };
 }
 
-export async function startTerminal(command: string = 'claude'): Promise<boolean> {
+export async function startTerminal(command: string = 'claude', cols: number = 80, rows: number = 24): Promise<boolean> {
   if (state.isRunning && state.process) {
     return false; // Already running
   }
@@ -92,11 +92,11 @@ export async function startTerminal(command: string = 'claude'): Promise<boolean
 
     const cmd = args.shift() || 'claude';
 
-    // Spawn PTY process
+    // Spawn PTY process with actual terminal size
     state.process = pty.spawn(cmd, args, {
       name: 'xterm-256color',
-      cols: 120,
-      rows: 30,
+      cols,
+      rows,
       cwd: process.cwd().replace(/\/web$/, ''), // Run in project root, not web/
       env: {
         ...process.env,

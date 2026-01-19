@@ -20,7 +20,9 @@ export const POST: RequestHandler = async ({ request }) => {
 
   if (body.action === 'start') {
     const command = body.command || 'claude';
-    const success = await startTerminal(command);
+    const cols = body.cols || 80;
+    const rows = body.rows || 24;
+    const success = await startTerminal(command, cols, rows);
     return json({ success, message: success ? 'Terminal started' : 'Terminal already running' });
   }
 

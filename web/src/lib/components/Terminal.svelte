@@ -31,7 +31,7 @@
     term = new Terminal({
       cursorBlink: true,
       fontFamily: 'Menlo, Monaco, "Courier New", monospace',
-      fontSize: 13,
+      fontSize: 12,
       theme: {
         background: '#1e1e2e',
         foreground: '#cdd6f4',
@@ -61,13 +61,22 @@
       }
     });
 
-    // Handle window resize
+    // Handle window resize and notify server
     const handleResize = () => {
-      if (fitAddon) {
+      if (fitAddon && term) {
         fitAddon.fit();
+        // Notify server of new size
+        fetch('/api/terminal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'resize', cols: term.cols, rows: term.rows })
+        }).catch(() => {});
       }
     };
     window.addEventListener('resize', handleResize);
+
+    // Initial resize after a short delay to ensure proper sizing
+    setTimeout(handleResize, 100);
 
     // Connect to SSE stream
     terminalStore.connect();
@@ -98,7 +107,10 @@
       terminalStore.clear();
     }
     const command = prompt ? `claude "${prompt}"` : 'claude';
-    await terminalStore.start(command);
+    // Pass terminal size when starting
+    const cols = term?.cols || 80;
+    const rows = term?.rows || 24;
+    await terminalStore.start(command, cols, rows);
   }
 
   function stopClaude() {
@@ -143,7 +155,7 @@
   <div
     bind:this={terminalEl}
     class="terminal-element rounded overflow-hidden"
-    style="height: 400px;"
+    style="height: calc(100vh - 200px); min-height: 400px;"
   ></div>
 </div>
 

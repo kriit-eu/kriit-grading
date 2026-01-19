@@ -75,11 +75,11 @@ function createTerminalStore() {
       });
     },
 
-    async start(command: string = 'claude') {
+    async start(command: string = 'claude', cols: number = 80, rows: number = 24) {
       const response = await fetch('/api/terminal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'start', command })
+        body: JSON.stringify({ action: 'start', command, cols, rows })
       });
       return response.json();
     },
