@@ -145,7 +145,7 @@ export function handleEvent(event: GradingEvent): void {
       const key = `${student}/${assignmentId}`;
       state.submissions.set(key, { status, error });
 
-      if (status === 'done' || status === 'skipped') {
+      if (status === 'done' || status === 'skipped' || status === 'google-drive') {
         state.progress.completed++;
       } else if (status === 'failed') {
         state.progress.failed++;

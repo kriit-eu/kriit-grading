@@ -27,6 +27,20 @@ const flags = {
 };
 
 /**
+ * Check if URL is a Google Drive/Docs/Sheets URL.
+ * These can't be cloned with git but can be graded via MCP tools.
+ *
+ * @param {string} url - The URL to check
+ * @returns {boolean} - True if it's a Google Drive URL
+ */
+function isGoogleDriveUrl(url) {
+  if (!url) return false;
+  return url.includes('drive.google.com') ||
+         url.includes('docs.google.com') ||
+         url.includes('sheets.google.com');
+}
+
+/**
  * Normalize GitHub URL to a clonable repository URL.
  * Extracts user/repo from any GitHub URL and ignores paths, query strings, etc.
  * Also handles raw.githubusercontent.com URLs.
@@ -82,6 +96,45 @@ async function cloneRepository(studentName, assignmentId, solutionUrl, assignmen
   const studentDir = join(outputDir, studentName);
   const assignmentDir = join(studentDir, String(assignmentId));
   const submissionKey = `${studentName}/${assignmentId}`;
+
+  // Handle Google Drive URLs (can't be cloned, but can be graded via MCP tools)
+  if (isGoogleDriveUrl(solutionUrl)) {
+    if (flags.verbose) {
+      console.log(`📄 Google Drive: ${studentName}/${assignmentId}`);
+    }
+
+    // Check if already processed
+    if (existsSync(join(assignmentDir, 'assignment_data.json'))) {
+      await notify('clone:progress', { student: studentName, assignmentId, status: 'skipped' });
+      await notify('submission:message', {
+        submissionKey,
+        action: 'Google Drive dokument',
+        result: 'Juba töödeldud',
+        failed: false
+      });
+      return { status: 'skipped', studentName, assignmentId, reason: 'google-drive already processed' };
+    }
+
+    // Create directory and save assignment_data.json
+    if (!flags.dryRun) {
+      await mkdir(assignmentDir, { recursive: true });
+      await writeFile(
+        join(assignmentDir, 'assignment_data.json'),
+        JSON.stringify(assignmentData, null, 2)
+      );
+    }
+
+    await notify('clone:progress', { student: studentName, assignmentId, status: 'google-drive' });
+    await notify('submission:message', {
+      submissionKey,
+      action: 'Google Drive dokument',
+      result: `${solutionUrl}`,
+      failed: false,
+      success: true
+    });
+
+    return { status: 'google-drive', studentName, assignmentId };
+  }
 
   // Normalize GitHub URL (extract base repo from tree/blob/etc paths)
   const cloneUrl = normalizeGitHubUrl(solutionUrl);
@@ -245,17 +298,20 @@ async function cloneAllRepositories(assignments) {
   const success = results.filter(r => r.status === 'success');
   const failed = results.filter(r => r.status === 'failed');
   const skipped = results.filter(r => r.status === 'skipped');
+  const googleDrive = results.filter(r => r.status === 'google-drive');
 
   await notify('clone:complete', {
     success: success.length,
     failed: failed.length,
-    skipped: skipped.length
+    skipped: skipped.length,
+    googleDrive: googleDrive.length
   });
 
   return {
     success: success.length,
     failed: failed.length,
     skipped: skipped.length,
+    googleDrive: googleDrive.length,
     results,
   };
 }
@@ -263,9 +319,10 @@ async function cloneAllRepositories(assignments) {
 function displaySummary(stats) {
   console.log('\n📊 Clone Summary\n');
   console.log('═'.repeat(70));
-  console.log(`✅ Success: ${stats.success}`);
-  console.log(`⏭️  Skipped: ${stats.skipped}`);
-  console.log(`❌ Failed:  ${stats.failed}`);
+  console.log(`✅ Success:      ${stats.success}`);
+  console.log(`📄 Google Drive: ${stats.googleDrive}`);
+  console.log(`⏭️  Skipped:      ${stats.skipped}`);
+  console.log(`❌ Failed:       ${stats.failed}`);
   console.log('═'.repeat(70));
 
   if (stats.failed > 0) {

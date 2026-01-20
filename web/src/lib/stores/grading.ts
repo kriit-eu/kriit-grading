@@ -147,7 +147,7 @@ function createGradingStore() {
             const submissions = { ...newState.submissions, [key]: { status, error } };
             const progress = { ...newState.progress };
 
-            if (status === 'done' || status === 'skipped') {
+            if (status === 'done' || status === 'skipped' || status === 'google-drive') {
               progress.completed++;
             } else if (status === 'failed') {
               progress.failed++;

@@ -74,6 +74,11 @@
       return { text: 'Kloonin...', class: 'bg-tertiary-500 text-white' };
     }
 
+    // Google Drive document (no git clone, graded via MCP tools)
+    if (cloneStatus?.status === 'google-drive') {
+      return { text: 'Dokument', class: 'bg-violet-500 text-white' };
+    }
+
     // Check last message action for current activity
     const lastMessage = messages[messages.length - 1];
     if (lastMessage) {
