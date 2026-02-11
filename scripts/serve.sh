@@ -3,8 +3,10 @@
 
 cd "$(dirname "$0")/.." || exit 1
 
-# Load environment
+# Load and export environment variables
+set -a  # automatically export all variables
 source .env 2>/dev/null
+set +a
 PORT=${WEB_PORT:-3000}
 
 # Kill any existing process on the port
@@ -17,7 +19,7 @@ cd web && bun run build || exit 1
 # Run server in a loop (using Node.js for node-pty compatibility)
 while true; do
   echo "Starting server on port $PORT..."
-  PORT=$PORT node build/index.js
+  node build/index.js
   EXIT_CODE=$?
 
   if [ $EXIT_CODE -eq 0 ]; then
