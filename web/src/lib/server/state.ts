@@ -4,6 +4,7 @@
  */
 
 import { resolve } from 'path';
+import { readFileSync, existsSync } from 'fs';
 
 export interface GradingEvent {
   type: string;
@@ -16,6 +17,7 @@ export interface Assignment {
   name: string;
   submissions: number;
   ungraded: number;
+  individualSubmissions?: any[];
 }
 
 export interface Message {
@@ -63,6 +65,39 @@ const state: GradingState = {
   serverStartedAt,
   kriitUrl
 };
+
+// Initialize state from local grading-batch.json if it exists
+function initializeState() {
+  let batchPath = resolve(process.cwd(), '../grading-batch.json');
+  if (!existsSync(batchPath)) {
+    batchPath = resolve(process.cwd(), 'grading-batch.json');
+  }
+  if (existsSync(batchPath)) {
+    try {
+      const content = readFileSync(batchPath, 'utf8');
+      const data = JSON.parse(content);
+      if (data && data.data) {
+        state.assignments = data.data.map((a: any) => ({
+          id: a.assignmentId,
+          name: a.assignmentName,
+          submissions: a.submissions ? a.submissions.length : 0,
+          ungraded: a.submissions ? a.submissions.filter((s: any) => !s.isGraded).length : 0,
+          individualSubmissions: a.submissions ? a.submissions.map((s: any) => ({
+            userId: s.userId,
+            studentName: s.studentName,
+            solutionUrl: s.solutionUrl,
+            submittedAt: s.submittedAt,
+            isGraded: s.isGraded
+          })) : []
+        }));
+        console.log(`Initialized SvelteKit state with ${state.assignments.length} assignments from grading-batch.json`);
+      }
+    } catch (e: any) {
+      console.error('Failed to load initial batch state:', e.message);
+    }
+  }
+}
+initializeState();
 
 // SSE clients - using a Set of controller callbacks
 type SSEController = (event: GradingEvent) => void;

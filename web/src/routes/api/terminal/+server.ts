@@ -19,7 +19,7 @@ export const POST: RequestHandler = async ({ request }) => {
   const body = await request.json();
 
   if (body.action === 'start') {
-    const command = body.command || 'claude';
+    const command = body.command || 'agy --dangerously-skip-permissions';
     const cols = body.cols || 80;
     const rows = body.rows || 24;
     const success = await startTerminal(command, cols, rows);

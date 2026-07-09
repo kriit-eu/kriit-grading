@@ -100,20 +100,20 @@
     }
   });
 
-  async function startClaude(prompt?: string) {
+  async function startAgy(prompt?: string) {
     if (term) {
       term.clear();
       lastWrittenLength = 0;
       terminalStore.clear();
     }
-    const command = prompt ? `claude "${prompt}"` : 'claude';
+    const command = prompt ? `agy --prompt-interactive "${prompt}" --dangerously-skip-permissions` : 'agy --dangerously-skip-permissions';
     // Pass terminal size when starting
     const cols = term?.cols || 80;
     const rows = term?.rows || 24;
     await terminalStore.start(command, cols, rows);
   }
 
-  function stopClaude() {
+  function stopAgy() {
     terminalStore.stop();
   }
 </script>
@@ -121,7 +121,7 @@
 <div class="terminal-container card bg-surface-900 p-4 rounded-lg">
   <div class="flex items-center justify-between mb-3">
     <div class="flex items-center gap-3">
-      <h3 class="text-lg font-semibold text-white">Claude Terminal</h3>
+      <h3 class="text-lg font-semibold text-white">Antigravity Terminal</h3>
       <span class="badge {isConnected ? 'bg-success-500' : 'bg-error-500'} text-xs px-2 py-0.5 rounded">
         {isConnected ? 'Connected' : 'Disconnected'}
       </span>
@@ -136,7 +136,7 @@
         <button
           type="button"
           class="btn btn-sm bg-primary-500 text-white hover:bg-primary-600"
-          on:click={() => startClaude('Hinda kõik esitused')}
+          on:click={() => startAgy('Loe failist AGY.md juhised ja asu kohe hindama (käivita järgemööda bun run list, bun run clone, bun run plagiarism jne). Ära raiska aega koodi analüüsimisele ega lisaskriptide kirjutamisele.')}
         >
           Hinda
         </button>
@@ -144,7 +144,7 @@
         <button
           type="button"
           class="btn btn-sm bg-error-500 text-white hover:bg-error-600"
-          on:click={stopClaude}
+          on:click={stopAgy}
         >
           Stop
         </button>

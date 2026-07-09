@@ -11,7 +11,7 @@
  */
 
 import { existsSync, readFileSync } from 'fs';
-import { mkdir, writeFile } from 'fs/promises';
+import { mkdir, writeFile, rm } from 'fs/promises';
 import { join } from 'path';
 import { $ } from 'bun';
 import { getBatchFilePath, getWorkDir } from './config.js';
@@ -48,7 +48,7 @@ function isGoogleDriveUrl(url) {
  * @param {string} url - The GitHub URL to normalize
  * @returns {string} - The normalized clone URL (https://github.com/user/repo.git)
  */
-function normalizeGitHubUrl(url) {
+export function normalizeGitHubUrl(url) {
   if (!url) return url;
 
   // Match raw.githubusercontent.com URLs
@@ -91,7 +91,7 @@ function loadBatchData() {
   return data.data;
 }
 
-async function cloneRepository(studentName, assignmentId, solutionUrl, assignmentData) {
+export async function cloneRepository(studentName, assignmentId, solutionUrl, assignmentData) {
   const outputDir = getWorkDir();
   const studentDir = join(outputDir, studentName);
   const assignmentDir = join(studentDir, String(assignmentId));
@@ -142,17 +142,80 @@ async function cloneRepository(studentName, assignmentId, solutionUrl, assignmen
   try {
     // Check if already cloned
     if (existsSync(join(assignmentDir, '.git'))) {
-      if (flags.verbose) {
-        console.log(`⏭️  Skipped: ${studentName}/${assignmentId} (already exists)`);
+      try {
+        await notify('clone:progress', { student: studentName, assignmentId, status: 'cloning' });
+        
+        const beforeHash = (await $`env git -C ${assignmentDir} rev-parse --short HEAD`.env(process.env).quiet().text()).trim();
+        
+        if (!flags.dryRun) {
+          await $`env git -C ${assignmentDir} pull`.env(process.env).quiet();
+          // Write/update assignment_data.json after successful pull
+          await writeFile(
+            join(assignmentDir, 'assignment_data.json'),
+            JSON.stringify(assignmentData, null, 2)
+          );
+        }
+        
+        const afterHash = (await $`env git -C ${assignmentDir} rev-parse --short HEAD`.env(process.env).quiet().text()).trim();
+        
+        if (beforeHash !== afterHash) {
+          const logOutput = (await $`env git -C ${assignmentDir} log --oneline -n 5 ${beforeHash}..${afterHash}`.env(process.env).quiet().text()).trim();
+          const commitSummary = logOutput ? `:\n${logOutput}` : '';
+          
+          if (flags.verbose) {
+            console.log(`🔄 Updated: ${studentName}/${assignmentId} (${beforeHash} -> ${afterHash})`);
+          }
+          await notify('submission:message', {
+            submissionKey,
+            action: 'Repositoorium uuendatud',
+            result: `Tõmmati uued muudatused: ${beforeHash} -> ${afterHash}${commitSummary}`,
+            failed: false,
+            success: true
+          });
+          await notify('clone:progress', { student: studentName, assignmentId, status: 'done' });
+          return { status: 'success', studentName, assignmentId, updated: true };
+        } else {
+          if (flags.verbose) {
+            console.log(`⏭️  Already up-to-date: ${studentName}/${assignmentId} (${beforeHash})`);
+          }
+          await notify('submission:message', {
+            submissionKey,
+            action: 'Repositoorium kontrollitud',
+            result: `Juba värske (commit: ${beforeHash})`,
+            failed: false,
+            success: true
+          });
+          await notify('clone:progress', { student: studentName, assignmentId, status: 'done' });
+          return { status: 'success', studentName, assignmentId, updated: false };
+        }
+      } catch (error) {
+        const stderr = error.stderr?.toString().trim();
+        const gitError = stderr ? ` (Git viga: ${stderr})` : '';
+        const fullErrorMessage = `${error.message}${gitError} for URL ${solutionUrl}`;
+        
+        if (flags.verbose) {
+          console.error(`❌ Failed to update: ${studentName}/${assignmentId} - ${fullErrorMessage}`);
+        }
+        await notify('submission:message', {
+          submissionKey,
+          action: 'Uuendamine ebaõnnestus',
+          result: `URL: ${solutionUrl}\nViga repositooriumi värskendamisel: ${fullErrorMessage}`,
+          failed: true
+        });
+        await notify('clone:progress', { student: studentName, assignmentId, status: 'failed', error: fullErrorMessage });
+        return { status: 'failed', studentName, assignmentId, error: fullErrorMessage };
       }
-      await notify('clone:progress', { student: studentName, assignmentId, status: 'skipped' });
-      await notify('submission:message', {
-        submissionKey,
-        action: 'Kloonimine vahele jäetud',
-        result: 'Repositoorium on juba kloonitud',
-        failed: false
-      });
-      return { status: 'skipped', studentName, assignmentId, reason: 'already exists' };
+    }
+
+    // If destination directory exists but is NOT a git repository, clean it up
+    // to avoid exit code 128 (destination path already exists and is not empty)
+    if (existsSync(assignmentDir)) {
+      if (flags.verbose) {
+        console.log(`🧹 Cleaning up non-git directory: ${assignmentDir}`);
+      }
+      if (!flags.dryRun) {
+        await rm(assignmentDir, { recursive: true, force: true });
+      }
     }
 
     // Clone repository
@@ -174,7 +237,7 @@ async function cloneRepository(studentName, assignmentId, solutionUrl, assignmen
       await mkdir(studentDir, { recursive: true });
 
       // Clone repository into target directory (git creates assignmentDir)
-      const result = await $`git clone ${cloneUrl} ${assignmentDir}`.quiet();
+      const result = await $`env git clone ${cloneUrl} ${assignmentDir}`.env(process.env).quiet();
 
       // Save assignment data after successful clone
       await writeFile(
@@ -199,8 +262,12 @@ async function cloneRepository(studentName, assignmentId, solutionUrl, assignmen
     return { status: 'success', studentName, assignmentId };
 
   } catch (error) {
+    const stderr = error.stderr?.toString().trim();
+    const gitError = stderr ? ` (Git viga: ${stderr})` : '';
+    const fullErrorMessage = `${error.message}${gitError} for URL ${solutionUrl}`;
+
     if (flags.verbose) {
-      console.error(`❌ Failed: ${studentName}/${assignmentId} - ${error.message}`);
+      console.error(`❌ Failed: ${studentName}/${assignmentId} - ${fullErrorMessage}`);
     }
 
     // Still save assignment_data.json so grading can continue
@@ -216,18 +283,18 @@ async function cloneRepository(studentName, assignmentId, solutionUrl, assignmen
       }
     }
 
-    await notify('clone:progress', { student: studentName, assignmentId, status: 'failed', error: error.message });
+    await notify('clone:progress', { student: studentName, assignmentId, status: 'failed', error: fullErrorMessage });
     await notify('submission:message', {
       submissionKey,
       action: 'Kloonimine ebaõnnestus',
-      result: error.message,
+      result: `URL: ${solutionUrl}\nPõhjus: ${fullErrorMessage}`,
       failed: true
     });
     return {
       status: 'failed',
       studentName,
       assignmentId,
-      error: error.message
+      error: fullErrorMessage
     };
   }
 }

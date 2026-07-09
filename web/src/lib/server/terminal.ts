@@ -1,5 +1,5 @@
 /**
- * Terminal manager for running Claude in a PTY.
+ * Terminal manager for running agy in a PTY.
  * Uses node-pty for proper pseudo-terminal support.
  * Broadcasts to SSE clients (same pattern as state.ts).
  */
@@ -61,7 +61,7 @@ export function registerClient(callback: SSEClient): () => void {
   };
 }
 
-export async function startTerminal(command: string = 'claude', cols: number = 80, rows: number = 24): Promise<boolean> {
+export async function startTerminal(command: string = 'agy --dangerously-skip-permissions', cols: number = 80, rows: number = 24): Promise<boolean> {
   if (state.isRunning && state.process) {
     return false; // Already running
   }
@@ -90,7 +90,7 @@ export async function startTerminal(command: string = 'claude', cols: number = 8
     }
     if (current) args.push(current);
 
-    const cmd = args.shift() || 'claude';
+    const cmd = args.shift() || 'agy';
 
     // Spawn PTY process with actual terminal size
     state.process = pty.spawn(cmd, args, {

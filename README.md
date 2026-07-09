@@ -2,21 +2,21 @@
 
 AI grading assistant for Kriit learning management system. This tool helps automate the grading workflow by fetching ungraded assignments, cloning student repositories, detecting plagiarism, **evaluating and grading student code**, and submitting feedback.
 
-It works by providing Claude with structured instructions (in `CLAUDE.md`) for evaluating programming assignments. Claude clones the student repositories, runs the code in Docker containers, checks against assignment criteria, detects plagiarism, and generates feedback in Estonian.
+It works by providing the agy harness with structured instructions (in `AGY.md`) for evaluating programming assignments. The agy harness clones the student repositories, runs the code in Docker containers, checks against assignment criteria, detects plagiarism, and generates feedback in Estonian.
 
 **Grading outcomes:**
 
-- **High confidence pass** - When Claude is confident that all criteria are met and there are no issues, the grade is automatically applied to the student's assignment (if `AUTO_APPROVE_HIGH_CONFIDENCE=true` in `.env`). The student sees their grade immediately.
+- **High confidence pass** - When the agy harness is confident that all criteria are met and there are no issues, the grade is automatically applied to the student's assignment (if `AUTO_APPROVE_HIGH_CONFIDENCE=true` in `.env`). The student sees their grade immediately.
 
-- **Any suspicion or uncertainty** - When Claude detects potential issues (plagiarism, incomplete criteria, code that doesn't run, or low confidence), it does NOT auto-approve. Instead, it leaves a **teacher-only visible comment** in Kriit with detailed findings. The teacher can then review the submission, read Claude's analysis, and decide whether to approve, modify the grade, or request resubmission.
+- **Any suspicion or uncertainty** - When the agy harness detects potential issues (plagiarism, incomplete criteria, code that doesn't run, or low confidence), it does NOT auto-approve. Instead, it leaves a **teacher-only visible comment** in Kriit with detailed findings. The teacher can then review the submission, read the agy harness's analysis, and decide whether to approve, modify the grade, or request resubmission.
 
 This two-tier approach ensures that clear passes are processed quickly while anything questionable gets human review.
 
 **Grade types:**
 
-- **Pass/fail assignments** (`A`/`MA`) - Claude evaluates whether all required criteria are met. If everything works correctly, the grade is `A` (arvestatud/passed). If any criterion fails, the grade is `MA` (mittearvestatud/not passed) with detailed feedback on what needs to be fixed.
+- **Pass/fail assignments** (`A`/`MA`) - The agy harness evaluates whether all required criteria are met. If everything works correctly, the grade is `A` (arvestatud/passed). If any criterion fails, the grade is `MA` (mittearvestatud/not passed) with detailed feedback on what needs to be fixed.
 
-- **Numeric grades** (`1`-`5`) - Claude evaluates each criterion and calculates a grade based on completion percentage. Grade `5` requires all criteria met with quality code. Lower grades reflect partial completion or quality issues. Detailed feedback explains which criteria passed/failed and why.
+- **Numeric grades** (`1`-`5`) - The agy harness evaluates each criterion and calculates a grade based on completion percentage. Grade `5` requires all criteria met with quality code. Lower grades reflect partial completion or quality issues. Detailed feedback explains which criteria passed/failed and why.
 
 ## Requirements
 
@@ -75,19 +75,19 @@ AUTO_APPROVE_HIGH_CONFIDENCE=true  # Set to false to require teacher approval fo
 
 ## Getting Started
 
-1. Open the project directory in [Claude Code](https://claude.ai/download):
+1. Open the project directory and run the `agy` harness:
    ```bash
    cd kriit-grading
-   claude
+   agy
    ```
 
-2. Ask Claude to start grading:
+2. Ask agy to start grading:
    ```
    Grade student assignments
    ```
 
-3. Claude will automatically:
-   - Read `CLAUDE.md` for grading instructions
+3. agy will automatically:
+   - Read `AGY.md` for grading instructions
    - Fetch ungraded assignments from Kriit API
    - Clone student repositories
    - Run plagiarism detection
@@ -95,11 +95,11 @@ AUTO_APPROVE_HIGH_CONFIDENCE=true  # Set to false to require teacher approval fo
    - Generate feedback in Estonian
    - Submit grades back to Kriit
 
-You can also ask Claude to grade specific assignments or re-evaluate submissions.
+You can also ask agy to grade specific assignments or re-evaluate submissions.
 
 ## Google Drive Access (Optional)
 
-If students submit Google Drive links, Claude needs OAuth access to read those files. This requires a one-time setup.
+If students submit Google Drive links, the agy harness needs OAuth access to read those files. This requires a one-time setup.
 
 ### 1. Create Google Cloud Project
 
@@ -155,10 +155,10 @@ bun run setup:gdrive
 
 This script is safe to run multiple times. It will:
 - Copy credentials to `~/.config/google-drive-mcp/` (overwrites existing)
-- Configure MCP server in Claude Code (replaces existing if present)
+- Configure MCP server in the agy harness (replaces existing if present)
 - Open browser for Google authentication
 
-After authentication, restart Claude Code.
+After authentication, restart the agy harness.
 
 **Available MCP tools:**
 - `search` - Search for files across Google Drive
@@ -167,7 +167,7 @@ After authentication, restart Claude Code.
 - `getGoogleSheetContent` - Read Google Sheets data
 - `createTextFile`, `updateTextFile` - Create/update text files
 
-**To verify it works**, ask Claude: "List my recent Google Drive files" or provide a Drive link.
+**To verify it works**, ask agy: "List my recent Google Drive files" or provide a Drive link.
 
 **Re-authentication** (when token expires after 7 days):
 ```bash
@@ -304,7 +304,7 @@ kriit-grading/
 ├── .env.example          # Credential template
 ├── package.json
 ├── README.md             # This file
-├── CLAUDE.md             # AI assistant instructions
+├── AGY.md                # AI assistant instructions
 ├── src/
 │   ├── config.js         # Configuration loader
 │   ├── api.js            # API client

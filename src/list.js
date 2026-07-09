@@ -7,7 +7,8 @@
  * Saves the full response to grading-batch.json for use by other commands.
  */
 
-import { writeFile } from 'fs/promises';
+import { writeFile, readFile } from 'fs/promises';
+import { existsSync } from 'fs';
 import { loadConfig, getBatchFilePath } from './config.js';
 import { apiGet } from './api.js';
 import { notify } from './lib/notify.js';
@@ -69,22 +70,48 @@ async function main() {
     await notify('list:start');
     console.log('🚀 Fetching ungraded assignments batch...');
 
-    const data = await fetchUngradedBatch();
+    let data = await fetchUngradedBatch();
     const outputFile = getBatchFilePath();
+    let assignments = data?.data || [];
+    let usingLocalFallback = false;
+
+    if (assignments.length === 0) {
+      // Check if we have an existing non-empty grading-batch.json
+      try {
+        if (existsSync(outputFile)) {
+          const content = await readFile(outputFile, 'utf8');
+          const localData = JSON.parse(content);
+          if (localData && localData.data && localData.data.length > 0) {
+            data = localData;
+            assignments = localData.data;
+            usingLocalFallback = true;
+          }
+        }
+      } catch (e) {
+        // Ignore fallback error, stick with empty
+      }
+    }
 
     if (!flags.dryRun) {
-      await writeFile(outputFile, JSON.stringify(data, null, 2));
-      if (flags.verbose) {
-        console.log(`✓ Saved to: ${outputFile}`);
+      if (!usingLocalFallback) {
+        await writeFile(outputFile, JSON.stringify(data, null, 2));
+        if (flags.verbose) {
+          console.log(`✓ Saved to: ${outputFile}`);
+        }
+      } else {
+        console.log(`💡 API returned 0 ungraded assignments. Preserved existing local grading-batch.json with ${assignments.length} assignments.`);
       }
     } else {
-      console.log('🔍 DRY RUN: Would save to', outputFile);
+      if (usingLocalFallback) {
+        console.log(`🔍 DRY RUN: API returned 0 ungraded assignments. Would preserve existing local grading-batch.json with ${assignments.length} assignments.`);
+      } else {
+        console.log('🔍 DRY RUN: Would save to', outputFile);
+      }
     }
 
     displaySummary(data);
 
     // Calculate totals for notification
-    const assignments = data?.data || [];
     const totalSubmissions = assignments.reduce((sum, a) => sum + a.submissions.length, 0);
     const totalUngraded = assignments.reduce((sum, a) => sum + a.submissions.filter(s => !s.isGraded).length, 0);
 
@@ -96,7 +123,11 @@ async function main() {
     });
 
     if (!flags.dryRun) {
-      console.log(`💾 Batch data saved to: grading-batch.json`);
+      if (usingLocalFallback) {
+        console.log(`💾 Preserved local batch data with: ${assignments.length} assignments`);
+      } else {
+        console.log(`💾 Batch data saved to: grading-batch.json`);
+      }
       console.log(`\nNext steps:`);
       console.log(`  bun clone         # Clone all repositories`);
       console.log(`  bun plagiarism    # Check for plagiarism`);

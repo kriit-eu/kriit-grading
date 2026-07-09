@@ -40,7 +40,7 @@ export function loadConfig() {
  * @returns {string}
  */
 export function getWorkDir() {
-  return join(PROJECT_ROOT, 'student-grading');
+  return process.env.STUDENT_GRADING_DIR || join(PROJECT_ROOT, 'student-grading');
 }
 
 /**

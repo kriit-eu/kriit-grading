@@ -1,4 +1,4 @@
-# CLAUDE.md
+# AGY.md
 
 ## Language Rules
 
@@ -69,6 +69,17 @@ probleem.
 - Fail puudub → **PEATA, raporteeri**
 - Pead koodi muutma, et see töötaks → **PEATA, raporteeri**
 - Pead arvama, millist käsku kasutada → **PEATA, raporteeri**
+
+### 1.4 HINDAMISSKAALA VALIK (Numbriline vs A/MA)
+
+Enne hinde määramist pead kindlaks tegema, kas hindad tööd numbriliselt (1-5) või mitteeristavalt (A/MA):
+1. **Rühma ülekirjutamine (`groupGradingTypeOverride` väli):**
+   * Kui `groupGradingTypeOverride` on `"NUMERIC"`, kasuta alati numbrilist skaalat (`1`-`5`).
+   * Kui `groupGradingTypeOverride` on `"NON_DIFFERENTIATED"`, kasuta alati mitteeristavat skaalat (`A`/`MA`).
+2. **Rühma nime reeglid (vaikimisi reegel kui ülekirjutust pole määratud):**
+   * Kui rühma nimi algab tähemärkidega **TAK** (nt TAK25), siis ei tohi numbrilisi hindeid panna. Hinne peab olema mitteeristav (**A** või **MA**).
+3. **Muu vaikimisi reegel:**
+   * Kui eelmised reeglid ei kehti, määra hinne numbriliselt (**1**-**5**).
 
 ---
 

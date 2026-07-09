@@ -168,32 +168,44 @@ export function extractTokens(code) {
 /**
  * Calculate similarity between two strings using Levenshtein distance
  */
-export function calculateSimilarity(str1, str2) {
+export function calculateSimilarity(str1, str2, threshold = 0.75) {
   const len1 = str1.length;
   const len2 = str2.length;
 
   if (len1 === 0) return len2 === 0 ? 1.0 : 0.0;
   if (len2 === 0) return 0.0;
 
-  // Use a simple matrix approach for Levenshtein distance
-  const matrix = Array(len1 + 1).fill(null).map(() => Array(len2 + 1).fill(0));
-
-  for (let i = 0; i <= len1; i++) matrix[i][0] = i;
-  for (let j = 0; j <= len2; j++) matrix[0][j] = j;
-
-  for (let i = 1; i <= len1; i++) {
-    for (let j = 1; j <= len2; j++) {
-      const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
-      matrix[i][j] = Math.min(
-        matrix[i - 1][j] + 1,      // deletion
-        matrix[i][j - 1] + 1,      // insertion
-        matrix[i - 1][j - 1] + cost // substitution
-      );
-    }
+  const maxLength = Math.max(len1, len2);
+  const minDistanceLimit = Math.abs(len1 - len2);
+  if (minDistanceLimit / maxLength > (1 - threshold)) {
+    return 0.0; // Early exit: similarity is guaranteed to be below threshold
   }
 
-  const distance = matrix[len1][len2];
-  const maxLength = Math.max(len1, len2);
+  // Use two rows instead of a full matrix to save memory O(N) space
+  let prevRow = new Int32Array(len2 + 1);
+  let currRow = new Int32Array(len2 + 1);
+
+  for (let j = 0; j <= len2; j++) {
+    prevRow[j] = j;
+  }
+
+  for (let i = 1; i <= len1; i++) {
+    currRow[0] = i;
+    for (let j = 1; j <= len2; j++) {
+      const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+      currRow[j] = Math.min(
+        prevRow[j] + 1,       // deletion
+        currRow[j - 1] + 1,   // insertion
+        prevRow[j - 1] + cost // substitution
+      );
+    }
+    // Swap rows
+    const temp = prevRow;
+    prevRow = currRow;
+    currRow = temp;
+  }
+
+  const distance = prevRow[len2];
   return 1 - (distance / maxLength);
 }
 

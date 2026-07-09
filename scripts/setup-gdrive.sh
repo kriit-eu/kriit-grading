@@ -55,19 +55,40 @@ cp "$DOWNLOADED_FILE" "$CREDENTIALS_FILE"
 chmod 600 "$CREDENTIALS_FILE"
 echo "✅ Credentials saved to: $CREDENTIALS_FILE"
 
-# Step 4: Add MCP server to Claude Code
+# Step 4: Add MCP server to agy harness
 echo ""
-echo "📦 Configuring Claude Code MCP server..."
+echo "📦 Configuring agy harness MCP server..."
 
-# Remove existing if present
-claude mcp remove gdrive 2>/dev/null || true
+node -e "
+const fs = require('fs');
+const path = require('path');
+const configPath = path.join(process.env.HOME, '.gemini/config/mcp_config.json');
+let config = { mcpServers: {} };
 
-# Add with environment variable
-claude mcp add gdrive \
-    -e GOOGLE_DRIVE_OAUTH_CREDENTIALS="$CREDENTIALS_FILE" \
-    -- npx @piotr-agier/google-drive-mcp
+try {
+  if (fs.existsSync(configPath)) {
+    const content = fs.readFileSync(configPath, 'utf8').trim();
+    if (content) {
+      config = JSON.parse(content);
+    }
+  }
+} catch (e) {
+  console.warn('Warning: Could not parse existing mcp_config.json, overwriting.');
+}
 
-echo "✅ MCP server added to Claude Code"
+if (!config.mcpServers) config.mcpServers = {};
+config.mcpServers['gdrive'] = {
+  command: 'npx',
+  args: ['-y', '@piotr-agier/google-drive-mcp'],
+  env: {
+    GOOGLE_DRIVE_OAUTH_CREDENTIALS: '$CREDENTIALS_FILE'
+  }
+};
+
+fs.mkdirSync(path.dirname(configPath), { recursive: true });
+fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+console.log('✅ MCP server added/updated in ~/.gemini/config/mcp_config.json');
+"
 
 # Step 5: Run authentication
 echo ""
@@ -82,7 +103,7 @@ echo ""
 echo "✅ Setup complete!"
 echo ""
 echo "Next steps:"
-echo "1. Restart Claude Code"
+echo "1. Restart agy harness"
 echo "2. Test with: 'List my Google Drive files'"
 echo ""
 echo "Note: Token expires after 7 days in testing mode."

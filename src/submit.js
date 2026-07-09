@@ -243,6 +243,18 @@ async function submitSingle(studentName, assignmentId) {
     return { status: 'success', studentName, assignmentId };
 
   } catch (error) {
+    if (error.message.includes('409 Conflict')) {
+      console.log(`   ⚠️  Skipped: Already graded by teacher (409 Conflict)`);
+      await notify('submit:progress', { student: studentName, assignmentId, status: 'done' });
+      await notify('submission:message', {
+        submissionKey,
+        action: 'Jäetud vahele',
+        result: 'Õpetaja on juba hinnanud (409 Conflict)',
+        failed: false,
+        success: true,
+      });
+      return { status: 'skipped', studentName, assignmentId };
+    }
     console.error(`   ❌ Failed: ${error.message}`);
     await notify('submit:progress', { student: studentName, assignmentId, status: 'error', error: error.message });
     await notify('submission:message', {
@@ -278,16 +290,18 @@ async function submitAll() {
 
   const success = results.filter(r => r.status === 'success').length;
   const failed = results.filter(r => r.status === 'failed').length;
+  const skipped = results.filter(r => r.status === 'skipped').length;
 
-  await notify('submit:complete', { success, failed });
+  await notify('submit:complete', { success, failed, skipped });
 
-  return { success, failed, results };
+  return { success, failed, skipped, results };
 }
 
 function displaySummary(stats) {
   console.log('\n' + '═'.repeat(70));
   console.log('\n📊 Submission Summary\n');
   console.log(`✅ Success: ${stats.success}`);
+  console.log(`⚠️  Skipped: ${stats.skipped}`);
   console.log(`❌ Failed:  ${stats.failed}`);
   console.log('═'.repeat(70));
 

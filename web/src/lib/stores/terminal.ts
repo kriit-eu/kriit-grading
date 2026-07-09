@@ -75,7 +75,7 @@ function createTerminalStore() {
       });
     },
 
-    async start(command: string = 'claude', cols: number = 80, rows: number = 24) {
+    async start(command: string = 'agy --dangerously-skip-permissions', cols: number = 80, rows: number = 24) {
       const response = await fetch('/api/terminal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
